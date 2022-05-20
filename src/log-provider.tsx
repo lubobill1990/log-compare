@@ -31,7 +31,7 @@ const defaultValue = {
   logFiles: new Map(),
   addLogFile() {},
   delLogFile() {},
-  scrollToTimestamp: 0,
+  scrollToTimestamp: Number.MAX_SAFE_INTEGER,
   setScrollToTimestamp(_val: number) {},
 
   searchKeywords: "",
@@ -152,6 +152,7 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
         } else if (data.type === "scrollToTimestamp") {
           debounceSetScrollToTimestamp(data.value);
         }
+        console.log(e);
       },
       [
         debounceSetActiveLogFileId,
