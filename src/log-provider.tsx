@@ -66,9 +66,16 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
             } else {
               currentTimestamp = timestamp;
 
-              thisLine = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()} - ${line.slice(
-                timestampEndIndex
-              )}`;
+              thisLine = `${date.getHours().toString().padStart(2, "0")}:${date
+                .getMinutes()
+                .toString()
+                .padStart(2, "0")}:${date
+                .getSeconds()
+                .toString()
+                .padStart(2, "0")}.${date
+                .getMilliseconds()
+                .toString()
+                .padStart(3, "0")} - ${line.slice(timestampEndIndex)}`;
             }
             return [thisLine, timestamp];
           });

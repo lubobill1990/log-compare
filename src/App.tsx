@@ -9,13 +9,14 @@ import {
   ListOnItemsRenderedProps,
 } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
+type TargetTime = [number, number];
 
 interface IRowProps {
   index: number;
   style: any;
   data: {
     lines: Line[];
-    targetTime: number;
+    targetTime: TargetTime;
   };
 }
 
@@ -33,7 +34,8 @@ const Row = (props: IRowProps) => {
       className={[
         "line",
         index % 2 ? "odd" : "even",
-        targetTime === time ? "target" : "",
+        targetTime[0] === time ? "target" : "",
+        targetTime[1] === time ? "prev" : "",
       ].join(" ")}
       key={index}
       style={style}
@@ -98,9 +100,9 @@ function LogFileContainer(props: { file: LogFile }) {
     setActiveLogFileId,
     activeLogFileId,
   } = useLogContext();
-  const [localScrollToTimestamp, setLocalScrollToTimestamp] = useState(0);
-  const [targetTime, setTargetTime] = useState(0);
+  const [targetTime, setTargetTime] = useState<TargetTime>([0, 0]);
   const [filteredLines, setFilteredLines] = useState<Line[]>([]);
+
   useEffect(() => {
     if (searchKeywords.filter((v) => v).length === 0) {
       setFilteredLines(file.lines);
@@ -124,9 +126,11 @@ function LogFileContainer(props: { file: LogFile }) {
         Math.floor(visibleStartIndex + visibleStopIndex) / 2;
 
       if (filteredLines[scrollOffsetIndex]) {
-        setTargetTime(filteredLines[scrollOffsetIndex][1]);
+        setTargetTime((prev) => {
+          const time = filteredLines[scrollOffsetIndex][1];
+          return [time, time === prev[0] ? prev[1] : prev[0]];
+        });
         const timestamp = filteredLines[scrollOffsetIndex][1];
-        setLocalScrollToTimestamp(timestamp);
         if (isOperatingOnThisFileLog) {
           setScrollToTimestamp(timestamp);
         }
@@ -135,7 +139,6 @@ function LogFileContainer(props: { file: LogFile }) {
     [
       filteredLines,
       setScrollToTimestamp,
-      setLocalScrollToTimestamp,
       setTargetTime,
       isOperatingOnThisFileLog,
     ]
@@ -143,22 +146,25 @@ function LogFileContainer(props: { file: LogFile }) {
   const listRef = useRef<FixedSizeList>(null);
 
   useEffect(() => {
-    if (scrollToTimestamp !== localScrollToTimestamp) {
+    if (!isOperatingOnThisFileLog) {
       const localTargetIndex = binarySearchClosestLog(
         filteredLines,
         scrollToTimestamp
       );
       if (filteredLines[localTargetIndex]) {
-        setTargetTime(filteredLines[localTargetIndex][1]);
+        setTargetTime((prev) => {
+          const time = filteredLines[localTargetIndex][1];
+          return [time, time === prev[0] ? prev[1] : prev[0]];
+        });
       }
       if (listRef.current) {
         listRef.current.scrollToItem(localTargetIndex, "center");
       }
     }
   }, [
+    isOperatingOnThisFileLog,
     filteredLines,
     scrollToTimestamp,
-    localScrollToTimestamp,
     setTargetTime,
     listRef,
   ]);
@@ -176,7 +182,7 @@ function LogFileContainer(props: { file: LogFile }) {
               ref={listRef}
               className="List"
               itemCount={filteredLines.length}
-              itemSize={24}
+              itemSize={15}
               itemData={{
                 targetTime,
                 lines: filteredLines,

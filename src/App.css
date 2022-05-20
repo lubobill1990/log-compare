@@ -5,6 +5,9 @@
   width: 100vw;
   display: flex;
   flex-direction: column;
+  font-family: "Segoe UI", "-apple-system", BlinkMacSystemFont, Roboto,
+    "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .vertical-compare-zone {
@@ -37,9 +40,11 @@
 }
 .line {
   display: flex;
-  width: auto !important;
   padding: 0 0.5rem;
-  line-height: 24px;
+  line-height: 14px;
+  font-size: 12px;
+  font-family: Menlo, Consolas, "Courier New", monospace;
+  min-width: 5000px;
 }
 .line.odd {
   background-color: #ddd;
@@ -47,9 +52,18 @@
 .line.target {
   background-color: rgb(255, 255, 57) !important;
 }
+.line.target.odd {
+  background-color: rgb(225, 225, 50) !important;
+}
+.line.prev {
+  background-color: rgb(255, 194, 145) !important;
+}
+.line.prev.odd {
+  background-color: rgb(220, 161, 134) !important;
+}
 
 .count {
-  width: 5rem;
+  width: 2.5rem;
   padding-right: 1rem;
 }
 
