@@ -9,7 +9,7 @@ import {
   ListOnItemsRenderedProps,
 } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
-type TargetTime = [number, number];
+type TargetTime = [number, number, number];
 
 interface IRowProps {
   index: number;
@@ -17,6 +17,7 @@ interface IRowProps {
   data: {
     lines: Line[];
     targetTime: TargetTime;
+    setTargetTime(val: number): void;
   };
 }
 
@@ -24,18 +25,23 @@ const Row = (props: IRowProps) => {
   const {
     index,
     style,
-    data: { lines, targetTime },
+    data: { lines, targetTime, setTargetTime },
   } = props;
+  const { setScrollToTimestamp } = useLogContext();
   const content = lines[index][0];
   const time = lines[index][1];
-  const onClick = useCallback(() => {}, [time]);
+  const onClick = useCallback(() => {
+    setScrollToTimestamp(time);
+    setTargetTime(time);
+  }, [time, setScrollToTimestamp, setTargetTime]);
   return (
     <div
       className={[
         "line",
         index % 2 ? "odd" : "even",
         targetTime[0] === time ? "target" : "",
-        targetTime[1] === time ? "prev" : "",
+        targetTime[1] === time ? "prev-1" : "",
+        targetTime[2] === time ? "prev-2" : "",
       ].join(" ")}
       key={index}
       style={style}
@@ -100,9 +106,17 @@ function LogFileContainer(props: { file: LogFile }) {
     setActiveLogFileId,
     activeLogFileId,
   } = useLogContext();
-  const [targetTime, setTargetTime] = useState<TargetTime>([0, 0]);
+  const [targetTime, setTargetTimeStatus] = useState<TargetTime>([0, 0, 0]);
   const [filteredLines, setFilteredLines] = useState<Line[]>([]);
 
+  const setTargetTime = useCallback(
+    (time: number) => {
+      setTargetTimeStatus((prev) => {
+        return time === prev[0] ? prev : [time, prev[0], prev[1]];
+      });
+    },
+    [setTargetTimeStatus]
+  );
   useEffect(() => {
     if (searchKeywords.filter((v) => v).length === 0) {
       setFilteredLines(file.lines);
@@ -126,10 +140,7 @@ function LogFileContainer(props: { file: LogFile }) {
         Math.floor(visibleStartIndex + visibleStopIndex) / 2;
 
       if (filteredLines[scrollOffsetIndex]) {
-        setTargetTime((prev) => {
-          const time = filteredLines[scrollOffsetIndex][1];
-          return [time, time === prev[0] ? prev[1] : prev[0]];
-        });
+        setTargetTime(filteredLines[scrollOffsetIndex][1]);
         const timestamp = filteredLines[scrollOffsetIndex][1];
         if (isOperatingOnThisFileLog) {
           setScrollToTimestamp(timestamp);
@@ -152,10 +163,7 @@ function LogFileContainer(props: { file: LogFile }) {
         scrollToTimestamp
       );
       if (filteredLines[localTargetIndex]) {
-        setTargetTime((prev) => {
-          const time = filteredLines[localTargetIndex][1];
-          return [time, time === prev[0] ? prev[1] : prev[0]];
-        });
+        setTargetTime(filteredLines[localTargetIndex][1]);
       }
       if (listRef.current) {
         listRef.current.scrollToItem(localTargetIndex, "center");
@@ -172,6 +180,7 @@ function LogFileContainer(props: { file: LogFile }) {
   const onMouseEnter = useCallback(() => {
     setActiveLogFileId(file.id);
   }, [file.id, setActiveLogFileId]);
+
   return (
     <div className="file-wrapper" onMouseEnter={onMouseEnter}>
       <div className="title">{file.name}</div>
@@ -186,6 +195,7 @@ function LogFileContainer(props: { file: LogFile }) {
               itemData={{
                 targetTime,
                 lines: filteredLines,
+                setTargetTime,
               }}
               height={height}
               width={width}

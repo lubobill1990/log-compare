@@ -55,11 +55,17 @@
 .line.target.odd {
   background-color: rgb(225, 225, 50) !important;
 }
-.line.prev {
-  background-color: rgb(255, 194, 145) !important;
+.line.prev-1 {
+  background-color: rgb(253, 215, 184) !important;
 }
-.line.prev.odd {
-  background-color: rgb(220, 161, 134) !important;
+.line.prev-1.odd {
+  background-color: rgb(224, 193, 168) !important;
+}
+.line.prev-2 {
+  background-color: rgb(195, 216, 248) !important;
+}
+.line.prev-2.odd {
+  background-color: rgb(187, 206, 235) !important;
 }
 
 .count {
