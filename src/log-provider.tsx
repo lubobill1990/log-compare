@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { debounce } from "lodash";
-export type Line = [string, number];
+export type Line = [string, number, number];
 export type LogFile = {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ interface ILogContext {
 }
 
 const defaultValue = {
-  logFiles: new Map(),
+  logFiles: new Map<string, LogFile>(),
   addLogFile() {},
   delLogFile() {},
   scrollToTimestamp: Number.MAX_SAFE_INTEGER,
@@ -64,7 +64,7 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
         setLogFiles((prev) => {
           const rawLines = content.split("\n");
           let currentTimestamp = Number.MAX_SAFE_INTEGER;
-          const lines = rawLines.map((line) => {
+          const lines = rawLines.map((line, index) => {
             let thisLine = line;
             const timestampEndIndex = line.indexOf(" ");
             const date = new Date(line.slice(0, timestampEndIndex));
@@ -86,7 +86,7 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
                 .toString()
                 .padStart(3, "0")} - ${line.slice(timestampEndIndex)}`;
             }
-            return [thisLine, timestamp];
+            return [thisLine, timestamp, index] as Line;
           });
           const id = uuidv4();
           return new Map(prev).set(id, {

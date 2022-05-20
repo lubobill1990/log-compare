@@ -30,6 +30,7 @@ const Row = (props: IRowProps) => {
   const { setScrollToTimestamp } = useLogContext();
   const content = lines[index][0];
   const time = lines[index][1];
+  const lineNumber = lines[index][2];
   const onClick = useCallback(() => {
     setScrollToTimestamp(time);
     setTargetTime(time);
@@ -47,7 +48,7 @@ const Row = (props: IRowProps) => {
       style={style}
       onClick={onClick}
     >
-      <div className="count">{index}</div>
+      <div className="count">{lineNumber}</div>
       <div className="content">{content}</div>
     </div>
   );
@@ -97,11 +98,33 @@ function binarySearchClosestLog(
   return Math.floor((start + end) / 2);
 }
 
-function getKeywordsList(value: string) {
+function getKeywordsListLowerCase(value: string) {
   return value
     .toLowerCase()
     .split(",")
-    .map((v) => v.trim());
+    .map((v) => v.trim())
+    .filter((v) => v);
+}
+
+function filterLinesOnKeywords(lines: Line[], search: string) {
+  if (search.startsWith("/") && search.endsWith("/") && search.length > 2) {
+    const searches = search
+      .slice(1, -1)
+      .split("/&&/")
+      .map((s) => new RegExp(s));
+    return lines.filter((line) => {
+      return searches.every((reg) => line[0].search(reg) > -1);
+    });
+  }
+  const keywordsList = getKeywordsListLowerCase(search);
+  if (keywordsList.length === 0) {
+    return lines;
+  } else {
+    return lines.filter((line) => {
+      const lowerLine = line[0].toLowerCase();
+      return keywordsList.some((keyword) => lowerLine.indexOf(keyword) >= 0);
+    });
+  }
 }
 
 function LogFileContainer(props: { file: LogFile }) {
@@ -125,19 +148,7 @@ function LogFileContainer(props: { file: LogFile }) {
     [setTargetTimeStatus]
   );
   useEffect(() => {
-    const keywordsList = getKeywordsList(searchKeywords);
-    if (keywordsList.filter((v) => v).length === 0) {
-      setFilteredLines(file.lines);
-    } else {
-      setFilteredLines(
-        file.lines.filter((line) => {
-          const lowerLine = line[0].toLowerCase();
-          return keywordsList.some(
-            (keyword) => lowerLine.indexOf(keyword) >= 0
-          );
-        })
-      );
-    }
+    setFilteredLines(filterLinesOnKeywords(file.lines, searchKeywords));
   }, [searchKeywords, setFilteredLines, file.lines]);
 
   const isOperatingOnThisFileLog = activeLogFileId === file.id;
@@ -301,7 +312,7 @@ function App() {
           type="text"
           className="keywords"
           onChange={onChange}
-          placeholder="separate keywords with `,`"
+          placeholder="Separate keydwords with `,`. Regular expression supported as `/search1|search2/`. `AND` condition supported with regular express as `/a/&&/b/`."
           value={searchKeywords}
         />
       </div>
