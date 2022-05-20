@@ -276,7 +276,7 @@ function App() {
       <div className="vertical-compare-zone">
         {logFiles.size === 0 && (
           <div className="dropzone-hint">
-            <div>Drop log file here</div>
+            <div>Drop log files here</div>
             <div className="ensure-hint">
               To compare log files with timestamp locally, safely, and
               efficiently.
