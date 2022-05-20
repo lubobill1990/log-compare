@@ -48,7 +48,7 @@ const Row = (props: IRowProps) => {
       style={style}
       onClick={onClick}
     >
-      <div className="count">{lineNumber}</div>
+      <div className="count">{lineNumber + 1}</div>
       <div className="content">{content}</div>
     </div>
   );
