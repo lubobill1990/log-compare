@@ -97,6 +97,10 @@ function binarySearchClosestLog(
   return Math.floor((start + end) / 2);
 }
 
+function getKeywordsList(value: string) {
+  return value.split(",").map((v) => v.trim());
+}
+
 function LogFileContainer(props: { file: LogFile }) {
   const { file } = props;
   const {
@@ -118,13 +122,14 @@ function LogFileContainer(props: { file: LogFile }) {
     [setTargetTimeStatus]
   );
   useEffect(() => {
-    if (searchKeywords.filter((v) => v).length === 0) {
+    const keywordsList = getKeywordsList(searchKeywords);
+    if (keywordsList.filter((v) => v).length === 0) {
       setFilteredLines(file.lines);
     } else {
       setFilteredLines(
         file.lines.filter((line) => {
           const lowerLine = line[0].toLowerCase();
-          return searchKeywords.some(
+          return keywordsList.some(
             (keyword) => lowerLine.indexOf(keyword) >= 0
           );
         })
@@ -253,19 +258,22 @@ function useFileDropzone() {
 }
 
 function App() {
-  const { logFiles, setSearchKeywords } = useLogContext();
+  const { logFiles, setSearchKeywords, searchKeywords } = useLogContext();
   const dropRef = useFileDropzone();
 
   const onChange = useCallback(
     (e: React.ChangeEvent) => {
       const value = (e.target as HTMLInputElement).value;
-      setSearchKeywords(value.split(",").map((v) => v.trim()));
+      setSearchKeywords(value);
     },
     [setSearchKeywords]
   );
   return (
     <div className="App" ref={dropRef}>
       <div className="vertical-compare-zone">
+        {logFiles.size === 0 && (
+          <div className="dropzone-hint">Drop log file here</div>
+        )}
         {Array.from(logFiles.keys()).map((key) => {
           const logFile = logFiles.get(key);
           if (logFile) {
@@ -283,6 +291,7 @@ function App() {
           className="keywords"
           onChange={onChange}
           placeholder="separate keywords with `,`"
+          value={searchKeywords}
         />
       </div>
     </div>
