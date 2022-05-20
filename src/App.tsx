@@ -98,7 +98,10 @@ function binarySearchClosestLog(
 }
 
 function getKeywordsList(value: string) {
-  return value.split(",").map((v) => v.trim());
+  return value
+    .toLowerCase()
+    .split(",")
+    .map((v) => v.trim());
 }
 
 function LogFileContainer(props: { file: LogFile }) {
