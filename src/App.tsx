@@ -9,6 +9,10 @@ import {
   ListOnItemsRenderedProps,
 } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
+import {
+  SingleLogContextProvider,
+  useSingleLogContext,
+} from "./single-log-provider";
 type TargetTime = [number, number, number];
 
 interface IRowProps {
@@ -21,12 +25,23 @@ interface IRowProps {
   };
 }
 
+function highlightContent(content: string, highlightKeywords: string) {
+  const keywords = highlightKeywords
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => !!v);
+  return keywords.reduce((acc, keyword) => {
+    return acc.replace(keyword, `<b>${keyword}</b>`);
+  }, content);
+}
+
 const Row = (props: IRowProps) => {
   const {
     index,
     style,
     data: { lines, targetTime, setTargetTime },
   } = props;
+  const { highlightKeywords } = useSingleLogContext();
   const { setScrollToTimestamp } = useLogContext();
   const content = lines[index][0];
   const time = lines[index][1];
@@ -49,7 +64,12 @@ const Row = (props: IRowProps) => {
       onClick={onClick}
     >
       <div className="count">{lineNumber + 1}</div>
-      <div className="content">{content}</div>
+      <div
+        className="content"
+        dangerouslySetInnerHTML={{
+          __html: highlightContent(content, highlightKeywords),
+        }}
+      ></div>
     </div>
   );
 };
@@ -135,10 +155,17 @@ function LogFileContainer(props: { file: LogFile }) {
     setScrollToTimestamp,
     setActiveLogFileId,
     activeLogFileId,
+    delLogFile,
   } = useLogContext();
   const [targetTime, setTargetTimeStatus] = useState<TargetTime>([0, 0, 0]);
   const [filteredLines, setFilteredLines] = useState<Line[]>([]);
-
+  const {
+    setHighlightKeywords,
+    setSearchKeywords,
+    searchKeywords: filterKeywords,
+    filename,
+    setFilename,
+  } = useSingleLogContext();
   const setTargetTime = useCallback(
     (time: number) => {
       setTargetTimeStatus((prev) => {
@@ -148,8 +175,13 @@ function LogFileContainer(props: { file: LogFile }) {
     [setTargetTimeStatus]
   );
   useEffect(() => {
-    setFilteredLines(filterLinesOnKeywords(file.lines, searchKeywords));
-  }, [searchKeywords, setFilteredLines, file.lines]);
+    setFilteredLines(
+      filterLinesOnKeywords(
+        filterLinesOnKeywords(file.lines, searchKeywords),
+        filterKeywords
+      )
+    );
+  }, [searchKeywords, setFilteredLines, file.lines, filterKeywords]);
 
   const isOperatingOnThisFileLog = activeLogFileId === file.id;
   const onItemsRendered = useCallback(
@@ -200,9 +232,63 @@ function LogFileContainer(props: { file: LogFile }) {
     setActiveLogFileId(file.id);
   }, [file.id, setActiveLogFileId]);
 
+  const closeLog = useCallback(() => {
+    delLogFile(file.id);
+  }, [file.id, delLogFile]);
+
+  const onHighlightKeywordsChanged = useCallback(
+    (e: React.ChangeEvent) => {
+      setHighlightKeywords((e.target as HTMLInputElement).value);
+    },
+    [setHighlightKeywords]
+  );
+
+  const onFilterKeywordsChanged = useCallback(
+    (e: React.ChangeEvent) => {
+      setSearchKeywords((e.target as HTMLInputElement).value);
+    },
+    [setSearchKeywords]
+  );
+
+  const onTitleChanged = useCallback(
+    (e: React.ChangeEvent) => {
+      setFilename((e.target as HTMLInputElement).value);
+    },
+    [setFilename]
+  );
+
+  useEffect(() => {
+    setFilename(file.name);
+  }, [file.name, setFilename]);
+
   return (
     <div className="file-wrapper" onMouseEnter={onMouseEnter}>
-      <div className="title">{file.name}</div>
+      <div className="log-header">
+        <div className="title">
+          <input type="text" value={filename} onChange={onTitleChanged} />
+        </div>
+        <div className="log-filters">
+          <div className="log-filter">
+            <label htmlFor="">Local filter</label>
+            <input
+              type="text"
+              onChange={onFilterKeywordsChanged}
+              placeholder="Separate with `,`"
+            />
+          </div>
+          <div className="log-filter">
+            <label htmlFor="">Highlights</label>
+            <input
+              type="text"
+              onChange={onHighlightKeywordsChanged}
+              placeholder="Separate with `,`"
+            />
+          </div>
+        </div>
+        <div className="close" onClick={closeLog}>
+          ✕
+        </div>
+      </div>
       <div className="lines">
         <AutoSizer>
           {({ height, width }: { height: number; width: number }) => (
@@ -300,7 +386,9 @@ function App() {
           const logFile = logFiles.get(key);
           if (logFile) {
             return (
-              <LogFileContainer key={key} file={logFile}></LogFileContainer>
+              <SingleLogContextProvider>
+                <LogFileContainer key={key} file={logFile}></LogFileContainer>
+              </SingleLogContextProvider>
             );
           }
           return <></>;

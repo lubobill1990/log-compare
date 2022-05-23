@@ -24,11 +24,50 @@
   flex-direction: column;
   flex: 1;
 }
-
+.log-header {
+  box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
+  display: flex;
+  align-items: center;
+}
 .title {
   font-size: 20px;
   padding: 0.5rem;
-  box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
+  flex: 1;
+}
+
+.title input {
+  font-size: 20px;
+  border: none;
+  width: 100%;
+}
+
+.log-filters {
+  display: flex;
+  height: 20px;
+  margin-right: 2rem;
+}
+
+.log-filter {
+  display: flex;
+  margin-left: 2rem;
+}
+
+.log-filter label {
+  margin-right: 1rem;
+}
+
+.log-filter input {
+  flex: 1;
+}
+
+.close {
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
 }
 
 .dropzone {
@@ -61,6 +100,9 @@
   font-size: 12px;
   font-family: Menlo, Consolas, "Courier New", monospace;
   min-width: 5000px;
+}
+.line b {
+  background-color: rgb(255, 155, 155);
 }
 .line.odd {
   background-color: #ddd;
