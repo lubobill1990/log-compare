@@ -20,10 +20,14 @@
   overflow: hidden;
   background-color: #fff;
   display: flex;
-  margin-right: 1rem;
   flex-direction: column;
   flex: 1;
 }
+
+.file-wrapper + .file-wrapper {
+  margin-left: 1rem;
+}
+
 .log-header {
   box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
   display: flex;
@@ -143,6 +147,12 @@
 
 .global-footer {
   display: flex;
+  box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
 }
 
 .keyword-filter {
