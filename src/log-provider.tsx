@@ -23,6 +23,10 @@ interface ILogContext {
   setScrollToTimestamp(val: number): void;
   searchKeywords: string;
   setSearchKeywords(keywords: string): void;
+
+  highlightKeywords: string;
+  setHighlightKeywords(_keywords: string): void;
+
   activeLogFileId: string;
   setActiveLogFileId(id: string): void;
 }
@@ -36,6 +40,9 @@ const defaultValue = {
 
   searchKeywords: "",
   setSearchKeywords(_keywords: string) {},
+
+  highlightKeywords: "",
+  setHighlightKeywords(_keywords: string) {},
 
   activeLogFileId: "",
   setActiveLogFileId(_id: string) {},
@@ -55,6 +62,9 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
     );
     const [searchKeywords, localSetSearchKeywords] = useState(
       defaultValue.searchKeywords
+    );
+    const [highlightKeywords, localSetHighlightKeywords] = useState(
+      defaultValue.highlightKeywords
     );
     const [activeLogFileId, localSetActiveLogFileId] = useState(
       defaultValue.activeLogFileId
@@ -127,6 +137,10 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
       () => debounce(localSetSearchKeywords, 100),
       [localSetSearchKeywords]
     );
+    const debounceSetHighlightKeywords = useMemo(
+      () => debounce(localSetHighlightKeywords, 100),
+      [localSetHighlightKeywords]
+    );
     const debounceSetScrollToTimestamp = useMemo(
       () => debounce(localSetScrollToTimestamp, 100),
       [localSetScrollToTimestamp]
@@ -136,11 +150,13 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
         debounceSetActiveLogFileId.cancel();
         debounceSetSearchKeywords.cancel();
         debounceSetScrollToTimestamp.cancel();
+        debounceSetHighlightKeywords.cancel();
       };
     }, [
       debounceSetActiveLogFileId,
       debounceSetSearchKeywords,
       debounceSetScrollToTimestamp,
+      debounceSetHighlightKeywords,
     ]);
     const messageHandler = useCallback(
       (e: MessageEvent) => {
@@ -151,13 +167,15 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
           debounceSetSearchKeywords(data.value);
         } else if (data.type === "scrollToTimestamp") {
           debounceSetScrollToTimestamp(data.value);
+        } else if (data.type === "highlightKeywords") {
+          debounceSetHighlightKeywords(data.value);
         }
-        console.log(e);
       },
       [
         debounceSetActiveLogFileId,
         debounceSetSearchKeywords,
         debounceSetScrollToTimestamp,
+        debounceSetHighlightKeywords,
       ]
     );
 
@@ -213,6 +231,17 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
       [postMessage, localSetSearchKeywords]
     );
 
+    const setHighlightKeywords = useCallback(
+      (value: string) => {
+        postMessage({
+          type: "highlightKeywords",
+          value,
+        });
+        localSetHighlightKeywords(value);
+      },
+      [postMessage, localSetHighlightKeywords]
+    );
+
     const value = {
       delLogFile,
       logFiles,
@@ -223,6 +252,8 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
       setSearchKeywords,
       activeLogFileId,
       setActiveLogFileId,
+      highlightKeywords,
+      setHighlightKeywords,
     };
 
     return <LogContext.Provider value={value}>{children}</LogContext.Provider>;

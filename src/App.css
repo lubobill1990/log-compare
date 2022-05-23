@@ -52,10 +52,6 @@
   margin-left: 2rem;
 }
 
-.log-filter label {
-  margin-right: 1rem;
-}
-
 .log-filter input {
   flex: 1;
 }
@@ -145,14 +141,29 @@
   width: 100%;
 }
 
-.keyword-filter {
+.global-footer {
   display: flex;
-  padding: 0.5rem;
 }
 
-.keyword-filter label {
+.keyword-filter {
+  display: flex;
+  padding: 0.5rem 1rem 0.5rem;
+  flex: 1;
+}
+
+label {
   margin-right: 1rem;
 }
 .keyword-filter input {
   flex: 1;
+}
+
+.global-highlight-keywords {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem 0.5rem;
+}
+
+.global-highlight-keywords input {
+  width: 20rem;
 }

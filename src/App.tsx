@@ -42,6 +42,7 @@ const Row = (props: IRowProps) => {
     data: { lines, targetTime, setTargetTime },
   } = props;
   const { highlightKeywords } = useSingleLogContext();
+  const { highlightKeywords: globalHighlightKeywords } = useLogContext();
   const { setScrollToTimestamp } = useLogContext();
   const content = lines[index][0];
   const time = lines[index][1];
@@ -67,7 +68,10 @@ const Row = (props: IRowProps) => {
       <div
         className="content"
         dangerouslySetInnerHTML={{
-          __html: highlightContent(content, highlightKeywords),
+          __html: highlightContent(
+            content,
+            [highlightKeywords, globalHighlightKeywords].join(",")
+          ),
         }}
       ></div>
     </div>
@@ -269,7 +273,7 @@ function LogFileContainer(props: { file: LogFile }) {
         </div>
         <div className="log-filters">
           <div className="log-filter">
-            <label htmlFor="">Local filter</label>
+            <label htmlFor="">Filter:</label>
             <input
               type="text"
               onChange={onFilterKeywordsChanged}
@@ -277,7 +281,7 @@ function LogFileContainer(props: { file: LogFile }) {
             />
           </div>
           <div className="log-filter">
-            <label htmlFor="">Highlights</label>
+            <label htmlFor="">Highlights:</label>
             <input
               type="text"
               onChange={onHighlightKeywordsChanged}
@@ -358,15 +362,29 @@ function useFileDropzone() {
 }
 
 function App() {
-  const { logFiles, setSearchKeywords, searchKeywords } = useLogContext();
+  const {
+    logFiles,
+    setSearchKeywords,
+    searchKeywords,
+    setHighlightKeywords,
+    highlightKeywords,
+  } = useLogContext();
   const dropRef = useFileDropzone();
 
-  const onChange = useCallback(
+  const onGlobalFilterChange = useCallback(
     (e: React.ChangeEvent) => {
       const value = (e.target as HTMLInputElement).value;
       setSearchKeywords(value);
     },
     [setSearchKeywords]
+  );
+
+  const onGlobalHighlightKeywordsChange = useCallback(
+    (e: React.ChangeEvent) => {
+      const value = (e.target as HTMLInputElement).value;
+      setHighlightKeywords(value);
+    },
+    [setHighlightKeywords]
   );
   return (
     <div className="App" ref={dropRef}>
@@ -394,15 +412,27 @@ function App() {
           return <></>;
         })}
       </div>
-      <div className="keyword-filter">
-        <label htmlFor="">Filter keywords: </label>
-        <input
-          type="text"
-          className="keywords"
-          onChange={onChange}
-          placeholder="Separate keydwords with `,`. Regular expression supported as `/search1|search2/`. `AND` condition supported with regular express as `/a/&&/b/`."
-          value={searchKeywords}
-        />
+      <div className="global-footer">
+        <div className="keyword-filter">
+          <label htmlFor="">Global filter:</label>
+          <input
+            type="text"
+            className="keywords"
+            onChange={onGlobalFilterChange}
+            placeholder="Separate keydwords with `,`. Regular expression supported as `/search1|search2/`. `AND` condition supported with regular express as `/a/&&/b/`."
+            value={searchKeywords}
+          />
+        </div>
+        <div className="global-highlight-keywords">
+          <label htmlFor="">Global highlights:</label>
+          <input
+            type="text"
+            className="keywords"
+            onChange={onGlobalHighlightKeywordsChange}
+            placeholder="Separate with `,`"
+            value={highlightKeywords}
+          />
+        </div>
       </div>
     </div>
   );
