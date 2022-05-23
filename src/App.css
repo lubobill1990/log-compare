@@ -100,6 +100,7 @@
   font-size: 12px;
   font-family: Menlo, Consolas, "Courier New", monospace;
   min-width: 5000px;
+  position: relative;
 }
 .line b {
   background-color: rgb(255, 155, 155);
@@ -124,6 +125,16 @@
 }
 .line.target.odd {
   background-color: rgb(225, 225, 50) !important;
+}
+
+.line.selected::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(255, 45, 45, 0.476);
 }
 
 .count {
