@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import "./App.css";
 import { LogFile, useLogContext } from "./GlobalLogProvider";
 import { useSingleLogContext } from "./SingleLogProvider";
@@ -48,7 +48,7 @@ export const LogFileHeader = (props: { file: LogFile }) => {
       </div>
       <div className="log-filters">
         <div className="log-filter">
-          <label htmlFor="">Filter:</label>
+          <label htmlFor="">Filters:</label>
           <input
             type="text"
             onChange={onFilterKeywordsChanged}

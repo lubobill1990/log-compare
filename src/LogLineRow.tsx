@@ -17,8 +17,9 @@ function highlightContent(content: string, highlightKeywords: string) {
     .split(",")
     .map((v) => v.trim())
     .filter((v) => !!v);
-  return keywords.reduce((acc, keyword) => {
-    return acc.replace(keyword, `<b>${keyword}</b>`);
+  return keywords.reduce((acc, keyword, currentIndex) => {
+    const colorIndex = (currentIndex % 8) + 1;
+    return acc.replace(keyword, `<b class="c${colorIndex}">${keyword}</b>`);
   }, content);
 }
 

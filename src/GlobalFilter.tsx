@@ -27,7 +27,7 @@ export function GlobalFilter() {
   return (
     <div className="global-footer">
       <div className="keyword-filter">
-        <label htmlFor="">Global filter:</label>
+        <label htmlFor="">Global filters:</label>
         <input
           type="text"
           className="keywords"

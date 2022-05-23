@@ -102,9 +102,31 @@
   min-width: 5000px;
   position: relative;
 }
-.line b {
+.line b.c1 {
   background-color: rgb(255, 155, 155);
 }
+.line b.c2 {
+  background-color: rgb(197, 255, 120);
+}
+.line b.c3 {
+  background-color: rgb(120, 255, 188);
+}
+.line b.c4 {
+  background-color: rgb(120, 233, 255);
+}
+.line b.c5 {
+  background-color: rgb(120, 181, 255);
+}
+.line b.c6 {
+  background-color: rgb(143, 120, 255);
+}
+.line b.c7 {
+  background-color: rgb(226, 120, 255);
+}
+.line b.c8 {
+  background-color: rgb(255, 120, 197);
+}
+
 .line.odd {
   background-color: #ddd;
 }
