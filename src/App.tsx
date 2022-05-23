@@ -404,8 +404,8 @@ function App() {
           const logFile = logFiles.get(key);
           if (logFile) {
             return (
-              <SingleLogContextProvider>
-                <LogFileContainer key={key} file={logFile}></LogFileContainer>
+              <SingleLogContextProvider key={key}>
+                <LogFileContainer file={logFile}></LogFileContainer>
               </SingleLogContextProvider>
             );
           }
