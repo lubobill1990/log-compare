@@ -183,6 +183,12 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
       if (worker) {
         worker.port.addEventListener("message", messageHandler);
         worker.port.start();
+        postMessage(
+          {
+            type: "fetch",
+          },
+          false
+        );
         return () => {
           worker.port.removeEventListener("message", messageHandler);
         };
@@ -191,9 +197,12 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
     }, [worker, messageHandler]);
 
     const postMessage = useCallback(
-      (message: any) => {
+      (message: any, sync: boolean = true) => {
         if (worker) {
-          worker.port.postMessage(message);
+          worker.port.postMessage({
+            ...message,
+            sync,
+          });
         }
       },
       [worker]
@@ -222,10 +231,13 @@ export const LogContextProvider: React.FunctionComponent<any> = React.memo(
 
     const setSearchKeywords = useCallback(
       (value: string) => {
-        postMessage({
-          type: "searchKeywords",
-          value,
-        });
+        postMessage(
+          {
+            type: "searchKeywords",
+            value,
+          },
+          true
+        );
         localSetSearchKeywords(value);
       },
       [postMessage, localSetSearchKeywords]
