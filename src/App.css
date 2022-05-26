@@ -126,7 +126,36 @@
 .line b.c8 {
   background-color: rgb(255, 120, 197);
 }
-
+.line b.c9 {
+  background-color: rgb(255, 120, 120);
+}
+.line b.c10 {
+  background-color: rgb(199, 96, 96);
+}
+.line b.c11 {
+  background-color: rgb(199, 175, 96);
+}
+.line b.c12 {
+  background-color: rgb(165, 199, 96);
+}
+.line b.c13 {
+  background-color: rgb(104, 199, 96);
+}
+.line b.c14 {
+  background-color: rgb(96, 199, 168);
+}
+.line b.c15 {
+  background-color: rgb(96, 147, 199);
+}
+.line b.c16 {
+  background-color: rgb(106, 96, 199);
+}
+.line b.c17 {
+  background-color: rgb(182, 96, 199);
+}
+.line b.c18 {
+  background-color: rgb(199, 96, 151);
+}
 .line.odd {
   background-color: #ddd;
 }
