@@ -3,6 +3,7 @@ import { useLogContext } from "./GlobalLogProvider";
 import { GlobalFilter } from "./GlobalFilter";
 import { LogFileContainer } from "./LogFileSection";
 import { useFileDropzone } from "./useFileDropzone";
+import React from "react";
 
 function App() {
   const { logFiles } = useLogContext();
