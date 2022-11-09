@@ -10,6 +10,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { useSingleLogContext } from "./SingleLogProvider";
 import { LogLineRow } from "./LogLineRow";
 import { binarySearchClosestLog } from "./util";
+import React from "react";
 
 function getKeywordsListLowerCase(value: string) {
   return value

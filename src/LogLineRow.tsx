@@ -1,3 +1,4 @@
+import React from "react";
 import { useCallback } from "react";
 import "./App.css";
 import { Line, useLogContext } from "./GlobalLogProvider";

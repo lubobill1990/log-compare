@@ -3091,6 +3091,11 @@ char-regex@^2.0.0:
   resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/char-regex/-/char-regex-2.0.1.tgz#6dafdb25f9d3349914079f010ba8d0e6ff9cd01e"
   integrity sha1-ba/bJfnTNJkUB58BC6jQ5v+c0B4=
 
+"charenc@>= 0.0.1":
+  version "0.0.2"
+  resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/charenc/-/charenc-0.0.2.tgz#c0a1d2f3a7092e03774bfa83f14c0fc5790a8667"
+  integrity sha1-wKHS86cJLgN3S/qD8UwPxXkKhmc=
+
 check-types@^11.1.1:
   version "11.1.2"
   resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/check-types/-/check-types-11.1.2.tgz#86a7c12bf5539f6324eb0e70ca8896c0e38f3e2f"
@@ -3346,6 +3351,11 @@ cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+"crypt@>= 0.0.1":
+  version "0.0.2"
+  resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/crypt/-/crypt-0.0.2.tgz#88d7ff7ec0dfb86f713dc87bbb42d044d3e6c41b"
+  integrity sha1-iNf/fsDfuG9xPch7u0LQRNPmxBs=
 
 crypto-random-string@^2.0.0:
   version "2.0.0"
@@ -6463,6 +6473,16 @@ mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.6"
 
+mobx-react-lite@^3.4.0:
+  version "3.4.0"
+  resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/mobx-react-lite/-/mobx-react-lite-3.4.0.tgz#d59156a96889cdadad751e5e4dab95f28926dfff"
+  integrity sha1-1ZFWqWiJza2tdR5eTauV8okm3/8=
+
+mobx@^6.6.2:
+  version "6.6.2"
+  resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/mobx/-/mobx-6.6.2.tgz#9d9102a0e337e3fc09cb2d8ca0c6f00b61270d5a"
+  integrity sha1-nZECoOM34/wJyy2MoMbwC2EnDVo=
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -8201,6 +8221,14 @@ setprototypeof@1.2.0:
   version "1.2.0"
   resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/setprototypeof/-/setprototypeof-1.2.0.tgz#66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424"
   integrity sha1-ZsmiSnP5/CjL5msJ/tPTPcrxtCQ=
+
+sha1@^1.1.1:
+  version "1.1.1"
+  resolved "https://skype.pkgs.visualstudio.com/_packaging/tps/npm/registry/sha1/-/sha1-1.1.1.tgz#addaa7a93168f393f19eb2b15091618e2700f848"
+  integrity sha1-rdqnqTFo85PxnrKxUJFhjicA+Eg=
+  dependencies:
+    charenc ">= 0.0.1"
+    crypt ">= 0.0.1"
 
 shebang-command@^2.0.0:
   version "2.0.0"
