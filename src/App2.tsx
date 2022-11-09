@@ -125,7 +125,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
     data: { file },
   } = props;
 
-  const line = file.lines[index];
+  const line = file.filteredLines[index];
   return (
     <div
       className={[
@@ -149,28 +149,41 @@ const LogLineRenderer = observer((props: IRowProps) => {
   );
 });
 
-const LogFileBody = observer((props: { file: LogFile }) => {
-  const { file } = props;
+const AutoSizedList = observer(
+  (props: { file: LogFile; height: number; width: number }) => {
+    const { file, height, width } = props;
   const listRef = useRef<FixedSizeList>(null);
   const onItemsRendered = useCallback((e: ListOnItemsRenderedProps) => {}, []);
+    return (
+      <List
+        ref={listRef}
+        className="List"
+        itemCount={file.filteredLines.length}
+        itemSize={15}
+        itemData={{
+          file,
+        }}
+        height={height}
+        width={width}
+        onItemsRendered={onItemsRendered}
+      >
+        {LogLineRenderer}
+      </List>
+    );
+  }
+);
+
+const LogFileBody = observer((props: { file: LogFile }) => {
+  const { file } = props;
   return (
     <div className="lines" onWheel={() => {}}>
       <AutoSizer>
         {({ height, width }: { height: number; width: number }) => (
-          <List
-            ref={listRef}
-            className="List"
-            itemCount={file.lines.length}
-            itemSize={15}
-            itemData={{
-              file,
-            }}
+          <AutoSizedList
             height={height}
             width={width}
-            onItemsRendered={onItemsRendered}
-          >
-            {LogLineRenderer}
-          </List>
+            file={file}
+          ></AutoSizedList>
         )}
       </AutoSizer>
     </div>

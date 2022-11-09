@@ -58,6 +58,35 @@ export class LogFileNameStore {
   }
 }
 
+function getKeywordsListLowerCase(value: string) {
+  return value
+    .toLowerCase()
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v);
+}
+
+function filterLinesOnKeywords(lines: LogLine[], search: string) {
+  if (search.startsWith("/") && search.endsWith("/") && search.length > 2) {
+    const searches = search
+      .slice(1, -1)
+      .split("/&&/")
+      .map((s) => new RegExp(s));
+    return lines.filter((line) => {
+      return searches.every((reg) => line.content.search(reg) > -1);
+    });
+  }
+  const keywordsList = getKeywordsListLowerCase(search);
+  if (keywordsList.length === 0) {
+    return lines;
+  } else {
+    return lines.filter((line) => {
+      const lowerLine = line.content.toLowerCase();
+      return keywordsList.some((keyword) => lowerLine.indexOf(keyword) >= 0);
+    });
+  }
+}
+
 export class LogFile {
   lines: LogLine[] = [];
   id = uuidv4();
@@ -139,7 +168,13 @@ export class LogFile {
     this.customizedName = name;
     this.logFileNameStore.setFileName(this.sha1, name);
   }
-  getFilteredLines() {}
+
+  get filteredLines() {
+    return filterLinesOnKeywords(
+      filterLinesOnKeywords(this.lines, this.filter.searchKeywords),
+      this.globalFilter.searchKeywords
+    );
+  }
 }
 
 export class LogFiles {
