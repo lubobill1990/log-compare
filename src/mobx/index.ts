@@ -65,6 +65,7 @@ export class LogFile {
   constructor(
     public logFileNameStore: LogFileNameStore,
     public logFiles: LogFiles,
+    public globalFilter: Filter,
     public originName: string,
     public content: string,
     public sha1 = getSha1(content) as string,
@@ -74,6 +75,7 @@ export class LogFile {
     makeAutoObservable(this, {
       logFiles: false,
       logFileNameStore: false,
+      lines: false,
     });
   }
 
@@ -105,6 +107,22 @@ export class LogFile {
       return new LogLine(timestamp, thisLine, index);
     });
   }
+
+  get hightlightKeywords() {
+    return [this.filter.hightlightText, this.globalFilter.hightlightText]
+      .join(",")
+      .split(",")
+      .map((v) => v.trim())
+      .filter((v) => !!v);
+  }
+
+  highlightContent(content: string) {
+    return this.hightlightKeywords.reduce((acc, keyword, currentIndex) => {
+      const colorIndex = (currentIndex % 18) + 1;
+      return acc.replace(keyword, `<b class="c${colorIndex}">${keyword}</b>`);
+    }, content);
+  }
+
   delete() {
     this.logFiles.delete(this);
   }

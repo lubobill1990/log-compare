@@ -33,6 +33,7 @@ export function useFileDropzone() {
                   new LogFile(
                     logFileNameStore,
                     logFiles,
+                    globalFilter,
                     file.name,
                     reader.result as string
                   )
@@ -113,17 +114,18 @@ interface IRowProps {
   index: number;
   style: any;
   data: {
-    lines: LogLine[];
+    file: LogFile;
   };
 }
+
 const LogLineRenderer = observer((props: IRowProps) => {
   const {
     index,
     style,
-    data: { lines },
+    data: { file },
   } = props;
 
-  const line = lines[index];
+  const line = file.lines[index];
   return (
     <div
       className={[
@@ -140,7 +142,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
       <div
         className="content"
         dangerouslySetInnerHTML={{
-          __html: line.content,
+          __html: file.highlightContent(line.content),
         }}
       ></div>
     </div>
@@ -161,7 +163,7 @@ const LogFileBody = observer((props: { file: LogFile }) => {
             itemCount={file.lines.length}
             itemSize={15}
             itemData={{
-              lines: file.lines,
+              file,
             }}
             height={height}
             width={width}
