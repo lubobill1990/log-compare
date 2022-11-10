@@ -54,6 +54,7 @@
 .log-filter {
   display: flex;
   margin-left: 2rem;
+  align-items: center;
 }
 
 .log-filter input {
@@ -190,6 +191,7 @@
 
 .count {
   width: 2.5rem;
+  min-width: 2.5rem;
   padding-right: 1rem;
 }
 
@@ -229,7 +231,6 @@ label {
 
 .global-highlight-keywords {
   display: flex;
-  align-items: center;
   padding: 0.5rem 1rem 0.5rem;
 }
 

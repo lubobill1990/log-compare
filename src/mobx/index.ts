@@ -87,10 +87,42 @@ function filterLinesOnKeywords(lines: LogLine[], search: string) {
   }
 }
 
+function getDateFromLine(
+  line: string,
+  previousDate: Date,
+  startFromIndex: number = 57
+) {
+  if (line.search(/^\s/) === 0) {
+    return { dateString: "", date: previousDate };
+  }
+  if (startFromIndex === 0) {
+    startFromIndex = 57;
+  }
+  startFromIndex = Math.min(startFromIndex, line.length);
+  for (let i = startFromIndex; i > 23; i--) {
+    const dateString = line.substring(0, i);
+    const date = new Date(dateString);
+    if (date.toString() !== "Invalid Date") {
+      return { dateString, date };
+    }
+  }
+  return { dateString: "", date: previousDate };
+}
+
+const minimumValidTimestamp = new Date("2020-01-01").getTime();
+const maximumValidTimestamp = new Date().getTime();
+
+function isValidTimestamp(timestamp: number) {
+  return timestamp > minimumValidTimestamp && timestamp < maximumValidTimestamp;
+}
+
 export class LogFile {
   lines: LogLine[] = [];
   id = uuidv4();
   filter = new Filter();
+  selectedLines = [0, 0, 0];
+  selectedTimestamps = [0, 0, 0];
+
   constructor(
     public logFileNameStore: LogFileNameStore,
     public logFiles: LogFiles,
@@ -110,31 +142,43 @@ export class LogFile {
 
   private getLinesFromContent(content: string) {
     const rawLines = content.split("\n");
-    let currentTimestamp = Number.MAX_SAFE_INTEGER;
-    return rawLines.map((line, index) => {
+    let previousDate = new Date();
+    let previousDateString = "";
+    let orderDiffSum = 0;
+    const logLines = rawLines.map((line, index) => {
       let thisLine = line;
-      const timestampEndIndex = line.indexOf(" ");
-      const date = new Date(line.slice(0, timestampEndIndex));
+      const { date, dateString } = getDateFromLine(
+        line,
+        previousDate,
+        previousDateString.length
+      );
       let timestamp = date.getTime();
 
-      if (!timestamp) {
-        timestamp = currentTimestamp;
-      } else {
-        currentTimestamp = timestamp;
-
-        thisLine = `${date.getHours().toString().padStart(2, "0")}:${date
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}:${date
-          .getSeconds()
-          .toString()
-          .padStart(2, "0")}.${date
-          .getMilliseconds()
-          .toString()
-          .padStart(3, "0")} - ${line.slice(timestampEndIndex)}`;
+      if (dateString.length > 0 && isValidTimestamp(timestamp)) {
+        const timeDiff = timestamp - previousDate.getTime();
+        if (timeDiff > 0) {
+          orderDiffSum += 1;
+        } else if (timeDiff < 0) {
+          orderDiffSum -= 1;
+        }
       }
+      previousDate = date;
+      previousDateString = dateString;
+
+      thisLine = `${date.getHours().toString().padStart(2, "0")}:${date
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}:${date
+        .getSeconds()
+        .toString()
+        .padStart(2, "0")}.${date
+        .getMilliseconds()
+        .toString()
+        .padStart(3, "0")} - ${line.slice(dateString.length)}`;
       return new LogLine(timestamp, thisLine, index);
     });
+
+    return orderDiffSum > 0 ? logLines.reverse() : logLines;
   }
 
   get hightlightKeywords() {
@@ -158,6 +202,14 @@ export class LogFile {
   focus() {
     this.logFiles.focus(this);
   }
+
+  selectLine(lineNumber: number) {
+    if (this.selectedLines[0] !== lineNumber) {
+      this.selectedLines.unshift(lineNumber);
+      this.selectedLines.pop();
+    }
+  }
+
   get isFocused() {
     return this.logFiles.focusedFile !== undefined;
   }
