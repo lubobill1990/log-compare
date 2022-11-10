@@ -138,7 +138,15 @@ const LogLineRenderer = observer((props: IRowProps) => {
       style={style}
       onClick={() => {}}
     >
-      <div className="count">{line.lineNumber + 1}</div>
+      <div
+        className="count"
+        onClick={() => file.expandedLineRanges.addRange(
+          line.lineNumber - 1,
+          line.lineNumber - 1
+        )}
+      >
+        {line.lineNumber + 1}
+      </div>
       <div
         className="content"
         dangerouslySetInnerHTML={{
@@ -152,8 +160,9 @@ const LogLineRenderer = observer((props: IRowProps) => {
 const AutoSizedList = observer(
   (props: { file: LogFile; height: number; width: number }) => {
     const { file, height, width } = props;
-  const listRef = useRef<FixedSizeList>(null);
-  const onItemsRendered = useCallback((e: ListOnItemsRenderedProps) => {}, []);
+    const listRef = useRef<FixedSizeList>(null);
+    const onItemsRendered = useCallback((e: ListOnItemsRenderedProps) => {},
+    []);
     return (
       <List
         ref={listRef}

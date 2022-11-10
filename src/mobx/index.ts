@@ -16,6 +16,27 @@ export class Filter {
   setHightlightText(hightlightText: string) {
     this.hightlightText = hightlightText;
   }
+
+  get keywordFilter() {
+    const search = this.searchKeywords;
+    if (search.startsWith("/") && search.endsWith("/") && search.length > 2) {
+      const searches = search
+        .slice(1, -1)
+        .split("/&&/")
+        .map((s) => new RegExp(s));
+      return (line: LogLine) =>
+        searches.every((reg) => line.content.search(reg) > -1);
+    }
+    const keywordsList = getKeywordsListLowerCase(search);
+    if (keywordsList.length === 0) {
+      return () => true;
+    } else {
+      return (line: LogLine) => {
+        const lowerLine = line.content.toLowerCase();
+        return keywordsList.some((keyword) => lowerLine.indexOf(keyword) >= 0);
+      };
+    }
+  }
 }
 
 export class SharedState {
@@ -116,12 +137,47 @@ function isValidTimestamp(timestamp: number) {
   return timestamp > minimumValidTimestamp && timestamp < maximumValidTimestamp;
 }
 
+class LineRange {
+  constructor(public start: number, public end: number) {
+    makeAutoObservable(this);
+  }
+  isInRange(lineNumber: number) {
+    return lineNumber >= this.start && lineNumber <= this.end;
+  }
+  equalsTo(other: LineRange) {
+    return this.start === other.start && this.end === other.end;
+  }
+}
+
+class LineRanges {
+  ranges: LineRange[] = [];
+  constructor() {
+    makeAutoObservable(this);
+  }
+  addRange(start: number, end: number) {
+    this.ranges.push(new LineRange(start, end));
+  }
+  removeRange(start: number, end: number) {
+    const range= new LineRange(start, end);
+    this.ranges = this.ranges.filter((r) => r.equalsTo(range) === false);
+  }
+
+  isInRange(lineNumber: number) {
+    return this.ranges.some((range) => range.isInRange(lineNumber));
+  }
+
+  get filter() {
+    return (line: LogLine) => this.isInRange(line.lineNumber);
+  }
+}
+
 export class LogFile {
   lines: LogLine[] = [];
   id = uuidv4();
   filter = new Filter();
   selectedLines = [0, 0, 0];
   selectedTimestamps = [0, 0, 0];
+  expandedLineRanges: LineRanges = new LineRanges();
 
   constructor(
     public logFileNameStore: LogFileNameStore,
@@ -204,9 +260,21 @@ export class LogFile {
   }
 
   selectLine(lineNumber: number) {
-    if (this.selectedLines[0] !== lineNumber) {
+    if (
+      lineNumber < this.lines.length &&
+      lineNumber >= 0 &&
+      this.selectedLines[0] !== lineNumber
+    ) {
       this.selectedLines.unshift(lineNumber);
       this.selectedLines.pop();
+      this.selectTimestamp(this.lines[lineNumber].timestamp);
+    }
+  }
+
+  selectTimestamp(timestamp: number) {
+    if (this.selectedTimestamps[0] !== timestamp) {
+      this.selectedTimestamps.unshift(timestamp);
+      this.selectedTimestamps.pop();
     }
   }
 
@@ -222,10 +290,15 @@ export class LogFile {
   }
 
   get filteredLines() {
-    return filterLinesOnKeywords(
-      filterLinesOnKeywords(this.lines, this.filter.searchKeywords),
-      this.globalFilter.searchKeywords
-    );
+    const localKeywordFilter = this.filter.keywordFilter;
+    const globalKeywordFilter = this.globalFilter.keywordFilter;
+    const rangeFilter = this.expandedLineRanges.filter;
+    return this.lines.filter((line) => {
+      return (
+        (localKeywordFilter(line) && globalKeywordFilter(line)) ||
+        rangeFilter(line)
+      );
+    });
   }
 }
 
