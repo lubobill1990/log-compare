@@ -1,19 +1,50 @@
-import "./App.css";
-import React, { useCallback, useRef } from "react";
-import { DropTargetMonitor, useDrop } from "react-dnd";
-import { NativeTypes } from "react-dnd-html5-backend";
-import { Filter, LogFile, LogFileNameStore, LogFiles, LogLine } from "./mobx";
-import { observer } from "mobx-react-lite";
+import './App.css';
+import React, { useCallback, useRef } from 'react';
+import { DropTargetMonitor, useDrop } from 'react-dnd';
+import { NativeTypes } from 'react-dnd-html5-backend';
+import {
+  Filter,
+  LogFile,
+  LogFileNameStore,
+  LogFiles,
+  StoredFilters,
+} from './mobx';
+import { observer } from 'mobx-react-lite';
 import {
   FixedSizeList,
   FixedSizeList as List,
   ListOnItemsRenderedProps,
-} from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
+} from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { cx } from '@/common/cx';
 
 const logFiles = new LogFiles();
 const logFileNameStore = new LogFileNameStore();
 const globalFilter = new Filter();
+const storedFilters = new StoredFilters();
+
+const StoredFiltersSelector = observer(() => {
+  return (
+    <select
+      className={cx('123')}
+      onChange={(e) => {
+        const filter = storedFilters.storedFilters[parseInt(e.target.value)];
+        if (filter) {
+          globalFilter.hightlightText = filter.hightlightText;
+          globalFilter.searchKeywords = filter.searchKeywords;
+        }
+      }}
+    >
+      <option value="">Stored filters</option>
+      {storedFilters.storedFilters.map((filter, index) => (
+        <option value={index} key={index}>
+          {filter.name ||
+            `Search: ${filter.searchKeywords} - Highlight: ${filter.hightlightText}`}
+        </option>
+      ))}
+    </select>
+  );
+});
 
 export function useFileDropzone() {
   const [, dropRef] = useDrop(
@@ -25,8 +56,8 @@ export function useFileDropzone() {
           files.forEach((file) => {
             const reader = new FileReader();
             // dropRef.current.getBoundingClientRect()
-            reader.onabort = () => console.log("file reading was aborted");
-            reader.onerror = () => console.log("file reading has failed");
+            reader.onabort = () => console.log('file reading was aborted');
+            reader.onerror = () => console.log('file reading has failed');
             reader.onload = () => {
               if (reader.result) {
                 logFiles.add(
@@ -77,7 +108,7 @@ const LogFileHeader = observer((props: { file: LogFile }) => {
       </div>
       <div className="log-filters">
         <div className="log-filter">
-          <label htmlFor="">Filters:</label>
+          <label htmlFor="">Search:</label>
           <input
             type="text"
             onChange={(e: React.ChangeEvent) => {
@@ -109,7 +140,7 @@ const LogFileHeader = observer((props: { file: LogFile }) => {
     </div>
   );
 });
-LogFileHeader.displayName = "LogFileHeader";
+LogFileHeader.displayName = 'LogFileHeader';
 interface IRowProps {
   index: number;
   style: any;
@@ -129,21 +160,23 @@ const LogLineRenderer = observer((props: IRowProps) => {
   return (
     <div
       className={[
-        "line",
-        index % 2 ? "odd" : "even",
+        'line',
+        index % 2 ? 'odd' : 'even',
 
-        line.lineNumber === 1 ? "selected" : "",
-      ].join(" ")}
+        line.lineNumber === 1 ? 'selected' : '',
+      ].join(' ')}
       key={index}
       style={style}
       onClick={() => {}}
     >
       <div
         className="count"
-        onClick={() => file.expandedLineRanges.addRange(
-          line.lineNumber - 1,
-          line.lineNumber - 1
-        )}
+        onClick={() =>
+          file.expandedLineRanges.addRange(
+            line.lineNumber - 1,
+            line.lineNumber - 1
+          )
+        }
       >
         {line.lineNumber + 1}
       </div>
@@ -211,8 +244,11 @@ const LogFileRenderer = observer(({ file }: { file: LogFile }) => {
 const GlobalFilterRenderer = observer(() => {
   return (
     <div className="global-footer">
+      <div className="stored-filters">
+        <StoredFiltersSelector></StoredFiltersSelector>
+      </div>
       <div className="keyword-filter">
-        <label htmlFor="">Global filters:</label>
+        <label htmlFor="">Global search:</label>
         <input
           type="text"
           className="keywords"
@@ -235,10 +271,19 @@ const GlobalFilterRenderer = observer(() => {
           value={globalFilter.hightlightText}
         />
       </div>
+      <div>
+        <button
+          onClick={() => {
+            storedFilters.saveFilter(globalFilter);
+          }}
+        >
+          Save Filter
+        </button>
+      </div>
     </div>
   );
 });
-GlobalFilterRenderer.displayName = "GlobalFilterRenderer";
+GlobalFilterRenderer.displayName = 'GlobalFilterRenderer';
 
 const DropzoneHint = observer(() => {
   return (
@@ -271,6 +316,6 @@ const App2 = observer(() => {
   );
 });
 
-App2.displayName = "App2";
+App2.displayName = 'App2';
 
 export default App2;

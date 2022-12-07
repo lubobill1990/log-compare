@@ -3,10 +3,11 @@ import { v4 as uuidv4 } from "uuid";
 import getSha1 from "sha1";
 
 export class Filter {
-  searchKeywords = "";
-  hightlightText = "";
-
-  constructor() {
+  constructor(
+    public searchKeywords = "",
+    public hightlightText = "",
+    public name = ""
+  ) {
     makeAutoObservable(this);
   }
 
@@ -79,33 +80,48 @@ export class LogFileNameStore {
   }
 }
 
+type StoredFilter = {
+  searchKeywords: string;
+  hightlightText: string;
+  name?: string;
+};
+
+export class StoredFilters {
+  storedFilters: StoredFilter[] = [];
+  constructor() {
+    this.storedFilters = this.reloadFilters();
+    makeAutoObservable(this);
+  }
+  private getStorageKey() {
+    return `storedFilters`;
+  }
+  private reloadFilters() {
+    const value = localStorage.getItem(this.getStorageKey());
+    if (value) {
+      return JSON.parse(value) as StoredFilter[];
+    }
+    return [];
+  }
+  private storeFilters() {
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(this.storedFilters));
+  }
+  saveFilter(filter: Filter, name?: string) {
+    this.storedFilters = this.reloadFilters();
+    this.storedFilters.push({
+      searchKeywords: filter.searchKeywords,
+      hightlightText: filter.hightlightText,
+      name,
+    });
+    this.storeFilters();
+  }
+}
+
 function getKeywordsListLowerCase(value: string) {
   return value
     .toLowerCase()
     .split(",")
     .map((v) => v.trim())
     .filter((v) => v);
-}
-
-function filterLinesOnKeywords(lines: LogLine[], search: string) {
-  if (search.startsWith("/") && search.endsWith("/") && search.length > 2) {
-    const searches = search
-      .slice(1, -1)
-      .split("/&&/")
-      .map((s) => new RegExp(s));
-    return lines.filter((line) => {
-      return searches.every((reg) => line.content.search(reg) > -1);
-    });
-  }
-  const keywordsList = getKeywordsListLowerCase(search);
-  if (keywordsList.length === 0) {
-    return lines;
-  } else {
-    return lines.filter((line) => {
-      const lowerLine = line.content.toLowerCase();
-      return keywordsList.some((keyword) => lowerLine.indexOf(keyword) >= 0);
-    });
-  }
 }
 
 function getDateFromLine(
@@ -151,14 +167,17 @@ class LineRange {
 
 class LineRanges {
   ranges: LineRange[] = [];
+
   constructor() {
     makeAutoObservable(this);
   }
+
   addRange(start: number, end: number) {
     this.ranges.push(new LineRange(start, end));
   }
+
   removeRange(start: number, end: number) {
-    const range= new LineRange(start, end);
+    const range = new LineRange(start, end);
     this.ranges = this.ranges.filter((r) => r.equalsTo(range) === false);
   }
 

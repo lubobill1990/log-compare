@@ -216,9 +216,12 @@
   position: relative;
 }
 
-.keyword-filter {
+.global-footer > div {
   display: flex;
-  padding: 0.5rem 1rem 0.5rem;
+  padding: .5rem;
+}
+
+.keyword-filter {
   flex: 1;
 }
 
@@ -229,11 +232,10 @@ label {
   flex: 1;
 }
 
-.global-highlight-keywords {
-  display: flex;
-  padding: 0.5rem 1rem 0.5rem;
-}
-
 .global-highlight-keywords input {
   width: 20rem;
+}
+
+.stored-filters button {
+  margin-left: .5rem;
 }

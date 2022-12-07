@@ -1,20 +1,17 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
 
-import reportWebVitals from "./reportWebVitals";
-import { LogContextProvider } from "./GlobalLogProvider";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import reportWebVitals from './reportWebVitals';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import App2 from './App2';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <LogContextProvider>
-      <DndProvider backend={HTML5Backend}>
-        <App2 />
-      </DndProvider>
-    </LogContextProvider>
+    <DndProvider backend={HTML5Backend}>
+      <App2 />
+    </DndProvider>
   </React.StrictMode>
 );
 

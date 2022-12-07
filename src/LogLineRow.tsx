@@ -1,9 +1,9 @@
-import React from "react";
-import { useCallback } from "react";
-import "./App.css";
-import { Line, useLogContext } from "./GlobalLogProvider";
+import React from 'react';
+import { useCallback } from 'react';
+import './App.css';
+import { Line, useLogContext } from './GlobalLogProvider';
 
-import { useSingleLogContext } from "./SingleLogProvider";
+import { useSingleLogContext } from './SingleLogProvider';
 
 interface IRowProps {
   index: number;
@@ -15,7 +15,7 @@ interface IRowProps {
 
 function highlightContent(content: string, highlightKeywords: string) {
   const keywords = highlightKeywords
-    .split(",")
+    .split(',')
     .map((v) => v.trim())
     .filter((v) => !!v);
   return keywords.reduce((acc, keyword, currentIndex) => {
@@ -50,13 +50,13 @@ export const LogLineRow = (props: IRowProps) => {
   return (
     <div
       className={[
-        "line",
-        index % 2 ? "odd" : "even",
-        targetTime[0] === time ? "target" : "",
-        targetTime[1] === time ? "prev-1" : "",
-        targetTime[2] === time ? "prev-2" : "",
-        lineNumber === selectedLine ? "selected" : "",
-      ].join(" ")}
+        'line',
+        index % 2 ? 'odd' : 'even',
+        targetTime[0] === time ? 'target' : '',
+        targetTime[1] === time ? 'prev-1' : '',
+        targetTime[2] === time ? 'prev-2' : '',
+        lineNumber === selectedLine ? 'selected' : '',
+      ].join(' ')}
       key={index}
       style={style}
       onClick={onClick}
@@ -67,7 +67,7 @@ export const LogLineRow = (props: IRowProps) => {
         dangerouslySetInnerHTML={{
           __html: highlightContent(
             content,
-            [highlightKeywords, globalHighlightKeywords].join(",")
+            [highlightKeywords, globalHighlightKeywords].join(',')
           ),
         }}
       ></div>
