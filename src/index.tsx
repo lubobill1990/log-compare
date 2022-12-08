@@ -1,16 +1,16 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-
-import reportWebVitals from './reportWebVitals';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import App2 from './App2';
+import ReactDOM from 'react-dom/client';
+
+import App from './app';
+import './index.css';
+import reportWebVitals from './reportWebVitals';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-      <App2 />
+      <App />
     </DndProvider>
   </React.StrictMode>
 );

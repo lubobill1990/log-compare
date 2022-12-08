@@ -185,14 +185,46 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background-color: rgba(255, 45, 45, 0.476);
+  height: 2px;
+  background-color: rgb(115, 11, 2);
 }
 
-.count {
+.line.selected-1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: rgb(2, 115, 38);
+}
+
+.line.selected-2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: rgb(13, 2, 115);
+}
+
+
+.line-head {
   width: 2.5rem;
   min-width: 2.5rem;
   padding-right: 1rem;
+  position: relative;
+}
+
+.line-mark {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+}
+
+.pin {
+  color: rgb(107, 0, 0);
 }
 
 .content {

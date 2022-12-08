@@ -2,10 +2,7 @@
   "tabWidth": 2,
   "useTabs": false,
   "singleQuote": true,
-  "importOrder": [
-    "^components/(.*)$",
-    "^[./]"
-  ],
+  "importOrder": ["^[a-zA-Z](.*)$", "^@/(.*)$", "^[./]"],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true
 }
