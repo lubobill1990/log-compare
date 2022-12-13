@@ -1,17 +1,21 @@
 import { observer } from 'mobx-react-lite';
+import ReactModal from 'react-modal';
 
-import './app.css';
+import { GlobalFilterRenderer } from '@/component/filter';
+
+import './app.scss';
 import { useCreateLogFiles, useFileDropzone } from './file-dropzone';
-import { FilePicker } from './file-picker';
-import { GlobalFilterRenderer } from './filter';
 import { LogFileBody } from './log-file-body';
 import { LogFileHeader } from './log-file-header';
 import { LogFile, useLogFlieStore } from './mobx/log-file';
 import { ContextMenus } from './widget/context-menu';
+import { FilePicker } from './widget/file-picker';
+
+ReactModal.setAppElement('#root');
 
 const LogFileRenderer = observer(({ file }: { file: LogFile }) => {
   return (
-    <div className="file-wrapper" onMouseEnter={() => file.focus()}>
+    <div className="file-wrapper">
       <LogFileHeader file={file}></LogFileHeader>
       <LogFileBody file={file}></LogFileBody>
     </div>
@@ -44,7 +48,6 @@ const DropzoneHint = observer(() => {
 const App = observer(() => {
   const dropRef = useFileDropzone();
   const logFileStore = useLogFlieStore();
-
   return (
     <div className="App" ref={dropRef}>
       <div className="vertical-compare-zone">

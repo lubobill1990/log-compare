@@ -1,0 +1,57 @@
+.global-footer {
+  display: flex;
+  box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
+  background: #fff;
+  position: relative;
+
+  & > div {
+    display: flex;
+    padding: 0.5rem;
+  }
+
+  label {
+    margin-right: 0.5rem;
+  }
+
+  .filter-action button {
+    margin-right: 0.5rem;
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.save-filter-modal {
+  .field-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+  }
+  .error {
+    color: red;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.stored-filter {
+  cursor: pointer;
+  position: relative;
+  padding: 1rem;
+
+  &.picked {
+    border: 2px solid #aaa;
+  }
+  .delete {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    width: 20px;
+    height: 20px;
+  }
+  label {
+    font-weight: bold;
+  }
+  p {
+    margin: 0;
+  }
+}

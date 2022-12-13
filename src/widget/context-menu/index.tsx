@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import React, { DOMAttributes, useEffect } from 'react';
 
 import { LogLine } from '@/interface';
-import { LogFile } from '@/mobx';
+import { LogFile } from '@/mobx/log-file';
 import { ContextMenuKey, useUIStore } from '@/mobx/ui-store';
 
 import './index.scss';

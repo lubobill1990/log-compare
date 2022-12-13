@@ -2,17 +2,18 @@ import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { observer } from 'mobx-react-lite';
-import React, { useCallback, useRef } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   FixedSizeList,
   FixedSizeList as List,
   ListOnItemsRenderedProps,
+  ListOnScrollProps,
 } from 'react-window';
 
-import './App.css';
 import { LogFile } from './mobx/log-file';
+import { useSharedStateStore } from './mobx/shared-state';
 import { ContextMenuKey } from './mobx/ui-store';
+import { useResizeObserver } from './resize-observer';
 import { ContextMenuTrigger } from './widget/context-menu';
 
 interface IRowProps {
@@ -32,6 +33,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
 
   const line = file.filteredLines[index];
   const isPinedLine = file.pinedLines.has(line.lineNumber);
+  const sharedStateStore = useSharedStateStore();
   return (
     <div
       className={[
@@ -49,6 +51,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
       style={style}
       onClick={() => {
         file.selectLine(line.lineNumber);
+        sharedStateStore.setFocusTimestamp(line.timestamp);
       }}
     >
       <div
@@ -92,12 +95,56 @@ const LogLineRenderer = observer((props: IRowProps) => {
 const AutoSizedList = observer(
   (props: { file: LogFile; height: number; width: number }) => {
     const { file, height, width } = props;
+
+    const sharedStateStore = useSharedStateStore();
+
     const listRef = useRef<FixedSizeList>(null);
-    const onItemsRendered = useCallback((e: ListOnItemsRenderedProps) => {},
-    []);
+    const listInnerRef = useRef<HTMLDivElement>(null);
+    const listOuterRef = useRef<HTMLDivElement>(null);
+
+    const scrollerWidth = 16;
+    const onItemsRendered = useCallback(
+      (e: ListOnItemsRenderedProps) => {
+        if (listOuterRef.current && listInnerRef.current) {
+          if (
+            listOuterRef.current.scrollWidth -
+              listInnerRef.current.clientWidth >
+            scrollerWidth + 4
+          ) {
+            listInnerRef.current.style.width = `${
+              listOuterRef.current.scrollWidth - scrollerWidth
+            }px`;
+          }
+        }
+
+        const { visibleStartIndex, visibleStopIndex } = e;
+        const scrollOffsetIndex = Math.floor(
+          (visibleStartIndex + visibleStopIndex) / 2
+        );
+        const { filteredLines } = file;
+        const scrolledLine = filteredLines[scrollOffsetIndex];
+
+        if (scrolledLine && file.isFocused) {
+          sharedStateStore.setFocusTimestamp(scrolledLine.timestamp);
+        }
+      },
+      [listOuterRef, scrollerWidth, listInnerRef, file, sharedStateStore]
+    );
+
+    const localTargetIndex = file.filteredLineNumberOfSelectedTimestamp;
+
+    useEffect(() => {
+      if (listRef.current) {
+        listRef.current.scrollToItem(localTargetIndex, 'smart');
+      }
+    }, [localTargetIndex]);
+
+    const onScroll = useCallback((_props: ListOnScrollProps) => {}, []);
     return (
       <List
         ref={listRef}
+        outerRef={listOuterRef}
+        innerRef={listInnerRef}
         className="List"
         itemCount={file.filteredLines.length}
         itemSize={15}
@@ -107,6 +154,7 @@ const AutoSizedList = observer(
         height={height}
         width={width}
         onItemsRendered={onItemsRendered}
+        onScroll={onScroll}
       >
         {LogLineRenderer}
       </List>
@@ -116,17 +164,17 @@ const AutoSizedList = observer(
 
 export const LogFileBody = observer((props: { file: LogFile }) => {
   const { file } = props;
+  const linesRef = useRef<HTMLDivElement>(null);
+  const { width, height } = useResizeObserver(linesRef);
   return (
-    <div className="lines" onWheel={() => {}}>
-      <AutoSizer>
-        {({ height, width }: { height: number; width: number }) => (
-          <AutoSizedList
-            height={height}
-            width={width}
-            file={file}
-          ></AutoSizedList>
-        )}
-      </AutoSizer>
+    <div
+      className="lines"
+      ref={linesRef}
+      onWheel={() => {}}
+      onMouseOver={() => file.focus()}
+      onMouseLeave={() => file.unfocus()}
+    >
+      <AutoSizedList height={height} width={width} file={file}></AutoSizedList>
     </div>
   );
 });

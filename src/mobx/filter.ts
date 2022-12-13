@@ -51,10 +51,10 @@ export class Filter {
   }
 }
 
-type StoredFilter = {
+export type StoredFilter = {
   searchKeywords: string;
   hightlightText: string;
-  name?: string;
+  name: string;
 };
 
 export class StoredFilters {
@@ -76,7 +76,16 @@ export class StoredFilters {
     this.storageProvider.save(this.storedFilters);
   }
 
-  saveFilter(filter: Filter, name?: string) {
+  deleteFilter(name: string) {
+    this.storedFilters = this.reloadFilters();
+    this.storedFilters = this.storedFilters.filter(
+      (filter) => filter.name !== name
+    );
+    this.storeFilters();
+    return true;
+  }
+
+  saveFilter(filter: Filter, name: string) {
     this.storedFilters = this.reloadFilters();
     this.storedFilters.push({
       searchKeywords: filter.searchKeywords,
@@ -84,14 +93,15 @@ export class StoredFilters {
       name,
     });
     this.storeFilters();
+    return true;
   }
 }
 
-const logFileFiltersStore = new StoredFilters();
-const logFileFiltersStoreContext = createContext(logFileFiltersStore);
+const storedFiltersStore = new StoredFilters();
+const storedFiltersContext = createContext(storedFiltersStore);
 
-export function useLogFileFilterStore() {
-  return useContext(logFileFiltersStoreContext);
+export function useStoredFiltersStore() {
+  return useContext(storedFiltersContext);
 }
 
 const globalFilterStore = new Filter();

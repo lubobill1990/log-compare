@@ -15,8 +15,20 @@ export class UIStore {
 
   contextMenuData: any | null = null;
 
+  isLoadFilterModalVisible = false;
+
+  isSaveFilterModalVisible = false;
+
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  toggleLoadFilterModal() {
+    this.isLoadFilterModalVisible = !this.isLoadFilterModalVisible;
+  }
+
+  toggleSaveFilterModel() {
+    this.isSaveFilterModalVisible = !this.isSaveFilterModalVisible;
   }
 
   showContextMenu(

@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { DropTargetMonitor, useDrop } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 
-import './App.css';
 import { useGlobalFilterStore } from './mobx/filter';
 import { LogFile, useLogFileNameStore, useLogFlieStore } from './mobx/log-file';
 
@@ -10,7 +9,6 @@ function useCreateLogFile() {
   const logFileStore = useLogFlieStore();
   const globalFilterStore = useGlobalFilterStore();
   const logFileNameStore = useLogFileNameStore();
-
   return useCallback(
     (name: string, content: string) => {
       logFileStore.add(
@@ -59,7 +57,6 @@ export function useFileDropzone() {
         if (files) {
           createLogFiles(files);
         }
-        return undefined;
       },
       hover(_item, _monitor) {},
       canDrop(_item: any) {

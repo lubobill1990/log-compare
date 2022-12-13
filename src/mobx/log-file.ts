@@ -133,20 +133,19 @@ export class LogFile {
   private storageProvider: LogFileStorageProvider;
 
   constructor(
-    public logFileNameStore: LogFileNameStore,
-    public logFiles: LogFiles,
+    private logFileNameStore: LogFileNameStore,
+    private logFiles: LogFiles,
     public globalFilter: Filter,
     public originName: string,
     public content: string,
     public sha1 = getSha1(content) as string,
     public customizedName = logFileNameStore.getFileName(sha1)
   ) {
+    this.selectedTimestamps[0] = Date.now();
     this.lines = this.getLinesFromContent(content);
     this.storageProvider = new LogFileStorageProvider(`logFile-${this.sha1}`);
     this.pinedLines = this.storageProvider.loadPinedLines();
     makeAutoObservable(this, {
-      logFiles: false,
-      logFileNameStore: false,
       lines: false,
     });
   }
@@ -191,7 +190,12 @@ export class LogFile {
       return new LogLine(timestamp, thisLine, index);
     });
 
-    return orderDiffSum > 0 ? logLines.reverse() : logLines;
+    return orderDiffSum > 0
+      ? logLines.reverse().map((logLine) => ({
+          ...logLine,
+          lineNumber: logLines.length - logLine.lineNumber - 1,
+        }))
+      : logLines;
   }
 
   get hightlightKeywords() {
@@ -205,7 +209,10 @@ export class LogFile {
   highlightContent(content: string) {
     return this.hightlightKeywords.reduce((acc, keyword, currentIndex) => {
       const colorIndex = (currentIndex % 18) + 1;
-      return acc.replace(keyword, `<b class="c${colorIndex}">${keyword}</b>`);
+      return acc.replaceAll(
+        keyword,
+        `<b class="c${colorIndex}">${keyword}</b>`
+      );
     }, content);
   }
 
@@ -215,6 +222,10 @@ export class LogFile {
 
   focus() {
     this.logFiles.focus(this);
+  }
+
+  unfocus() {
+    this.logFiles.unfocus(this);
   }
 
   selectLine(lineNumber: number) {
@@ -247,7 +258,7 @@ export class LogFile {
   }
 
   get isFocused() {
-    return this.logFiles.focusedFile !== undefined;
+    return this.logFiles.focusedFile?.id === this.id;
   }
 
   get name() {
@@ -271,12 +282,78 @@ export class LogFile {
       );
     });
   }
+
+  get selectedLineNumber() {
+    return this.selectedLines[0];
+  }
+
+  get selectedTimestamp() {
+    return this.selectedTimestamps[0];
+  }
+
+  get filteredLineNumberOfSelectedTimestamp() {
+    return this.getClosestLineIndexFromTimestmap(this.selectedTimestamp);
+  }
+
+  getClosestLineFromTimestamp(targetTimestamp: number, isInvertedOrder = true) {
+    const index = this.getClosestLineIndexFromTimestmap(
+      targetTimestamp,
+      isInvertedOrder
+    );
+    return this.filteredLines[index];
+  }
+
+  getClosestLineIndexFromTimestmap(
+    targetTimestamp: number,
+    isInvertedOrder: boolean = true
+  ) {
+    const orderedLogLines = this.filteredLines;
+    let start = 0;
+    let end = orderedLogLines.length - 1;
+
+    if (isInvertedOrder) {
+      while (start <= end) {
+        const middleIndex = Math.floor((start + end) / 2);
+        const middleTimestamp = orderedLogLines[middleIndex].timestamp;
+        if (middleTimestamp === targetTimestamp) {
+          // found the key
+          return middleIndex;
+        }
+        if (middleTimestamp < targetTimestamp) {
+          // continue searching to the right
+          end = middleIndex - 1;
+        } else {
+          // search searching to the left
+          start = middleIndex + 1;
+        }
+      }
+    } else {
+      while (start <= end) {
+        const middleIndex = Math.floor((start + end) / 2);
+        const middleTimestamp = orderedLogLines[middleIndex].timestamp;
+        if (middleTimestamp === targetTimestamp) {
+          // found the key
+          return middleIndex;
+        }
+        if (middleTimestamp < targetTimestamp) {
+          // continue searching to the right
+          start = middleIndex + 1;
+        } else {
+          // search searching to the left
+          end = middleIndex - 1;
+        }
+      }
+    }
+
+    // key wasn't found
+    return Math.floor((start + end) / 2);
+  }
 }
 
 export class LogFiles {
   files: LogFile[] = [];
 
-  focusedFile: LogFile | undefined = undefined;
+  focusedFile: LogFile | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -294,12 +371,22 @@ export class LogFiles {
     this.focusedFile = file;
   }
 
+  unfocus(file?: LogFile) {
+    if (file?.id === this.focusedFile?.id) {
+      this.focusedFile = null;
+    }
+  }
+
+  selectTimestamp(timestamp: number) {
+    this.files.forEach((file) => file.selectTimestamp(timestamp));
+  }
+
   get size() {
     return this.files.length;
   }
 }
 
-const logFileStore = new LogFiles();
+export const logFileStore = new LogFiles();
 const context = createContext(logFileStore);
 
 export function useLogFlieStore() {

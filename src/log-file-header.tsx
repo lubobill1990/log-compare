@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
+import { Field } from './common/form';
 import { LogFile } from './mobx/log-file';
 import { ContextMenuKey, useUIStore } from './mobx/ui-store';
 import { ContextMenuTrigger } from './widget/context-menu';
@@ -35,32 +36,24 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
       </ContextMenuTrigger>
 
       <div className="log-filters">
-        <div className="log-filter">
-          <label htmlFor="">Search:</label>
-          <input
-            type="text"
-            onChange={(e: React.ChangeEvent) => {
-              file.filter.setSearchKeywords(
-                (e.target as HTMLInputElement).value
-              );
-            }}
-            placeholder="Separate with `,`"
-            value={file.filter.searchKeywords}
-          />
-        </div>
-        <div className="log-filter">
-          <label htmlFor="">Highlights:</label>
-          <input
-            type="text"
-            onChange={(e: React.ChangeEvent) => {
-              file.filter.setHightlightText(
-                (e.target as HTMLInputElement).value
-              );
-            }}
-            placeholder="Separate with `,`"
-            value={file.filter.hightlightText}
-          />
-        </div>
+        <Field
+          className="log-filter"
+          label="Search"
+          value={file.filter.searchKeywords}
+          onChange={(e: React.ChangeEvent) =>
+            file.filter.setSearchKeywords((e.target as HTMLInputElement).value)
+          }
+          placeholder="Input search pattern"
+        ></Field>
+        <Field
+          className="log-filter"
+          label="Highlights"
+          value={file.filter.hightlightText}
+          onChange={(e: React.ChangeEvent) =>
+            file.filter.setHightlightText((e.target as HTMLInputElement).value)
+          }
+          placeholder="Separate with `,`"
+        ></Field>
       </div>
     </div>
   );

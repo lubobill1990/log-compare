@@ -1,0 +1,24 @@
+.modal-portal {
+  .modal-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 3rem;
+    border: none;
+    background: none;
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .modal-actions {
+    margin-top: 0.5rem;
+  }
+}
