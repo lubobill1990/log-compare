@@ -5,6 +5,12 @@ import { createContext, useContext } from 'react';
 import { LogLine } from '@/interface';
 import { StorageProvider } from '@/utils/storage-provider';
 
+export interface IFilter {
+  searchKeywords: string;
+  highlightText: string;
+  name: string;
+}
+
 function getKeywordsListLowerCase(value: string) {
   return value
     .toLowerCase()
@@ -13,10 +19,10 @@ function getKeywordsListLowerCase(value: string) {
     .filter((v) => v);
 }
 
-export class Filter {
+export class Filter implements IFilter {
   constructor(
     public searchKeywords = '',
-    public hightlightText = '',
+    public highlightText = '',
     public name = ''
   ) {
     makeAutoObservable(this);
@@ -26,8 +32,8 @@ export class Filter {
     this.searchKeywords = searchKeywords;
   }
 
-  setHightlightText(hightlightText: string) {
-    this.hightlightText = hightlightText;
+  setHighlightText(highlightText: string) {
+    this.highlightText = highlightText;
   }
 
   get keywordFilter() {
@@ -51,14 +57,8 @@ export class Filter {
   }
 }
 
-export type StoredFilter = {
-  searchKeywords: string;
-  hightlightText: string;
-  name: string;
-};
-
 export class StoredFilters {
-  storedFilters: StoredFilter[] = [];
+  storedFilters: IFilter[] = [];
 
   private storageProvider: StorageProvider;
 
@@ -69,7 +69,7 @@ export class StoredFilters {
   }
 
   private reloadFilters() {
-    return this.storageProvider.load<StoredFilter[]>([]);
+    return this.storageProvider.load<IFilter[]>([]);
   }
 
   private storeFilters() {
@@ -85,15 +85,23 @@ export class StoredFilters {
     return true;
   }
 
-  saveFilter(filter: Filter, name: string) {
+  saveFilter(filter: IFilter, name: string) {
     this.storedFilters = this.reloadFilters();
     this.storedFilters.push({
       searchKeywords: filter.searchKeywords,
-      hightlightText: filter.hightlightText,
+      highlightText: filter.highlightText,
       name,
     });
     this.storeFilters();
     return true;
+  }
+
+  exists(filter: IFilter) {
+    return this.reloadFilters().some(
+      (f) =>
+        f.searchKeywords === filter.searchKeywords &&
+        f.highlightText === filter.highlightText
+    );
   }
 }
 
@@ -104,7 +112,7 @@ export function useStoredFiltersStore() {
   return useContext(storedFiltersContext);
 }
 
-const globalFilterStore = new Filter();
+export const globalFilterStore = new Filter();
 const context = createContext(globalFilterStore);
 
 export function useGlobalFilterStore() {

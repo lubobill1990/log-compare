@@ -48,9 +48,9 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
         <Field
           className="log-filter"
           label="Highlights"
-          value={file.filter.hightlightText}
+          value={file.filter.highlightText}
           onChange={(e: React.ChangeEvent) =>
-            file.filter.setHightlightText((e.target as HTMLInputElement).value)
+            file.filter.setHighlightText((e.target as HTMLInputElement).value)
           }
           placeholder="Separate with `,`"
         ></Field>

@@ -10,6 +10,7 @@ export function Field(props: {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  inputStyle?: React.CSSProperties;
 }) {
   const {
     label,
@@ -28,10 +29,12 @@ export function Field(props: {
         type="text"
         id={inputId}
         value={value}
+        readOnly={!onChange}
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
         className={cx('field-input', inputClassName)}
+        style={props.inputStyle}
       />
     </div>
   );

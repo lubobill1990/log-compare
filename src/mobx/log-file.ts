@@ -198,8 +198,8 @@ export class LogFile {
       : logLines;
   }
 
-  get hightlightKeywords() {
-    return [this.filter.hightlightText, this.globalFilter.hightlightText]
+  get highlightKeywords() {
+    return [this.filter.highlightText, this.globalFilter.highlightText]
       .join(',')
       .split(',')
       .map((v) => v.trim())
@@ -207,7 +207,7 @@ export class LogFile {
   }
 
   highlightContent(content: string) {
-    return this.hightlightKeywords.reduce((acc, keyword, currentIndex) => {
+    return this.highlightKeywords.reduce((acc, keyword, currentIndex) => {
       const colorIndex = (currentIndex % 18) + 1;
       return acc.replaceAll(
         keyword,
@@ -293,6 +293,13 @@ export class LogFile {
 
   get filteredLineNumberOfSelectedTimestamp() {
     return this.getClosestLineIndexFromTimestmap(this.selectedTimestamp);
+  }
+
+  get searchKeywordsArray() {
+    return [
+      this.filter.searchKeywords,
+      this.globalFilter.searchKeywords,
+    ].filter((v) => v);
   }
 
   getClosestLineFromTimestamp(targetTimestamp: number, isInvertedOrder = true) {

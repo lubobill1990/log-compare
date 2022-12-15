@@ -92,6 +92,22 @@ const LogLineRenderer = observer((props: IRowProps) => {
   );
 });
 
+const NoLogLineHint = observer((props: { file: LogFile }) => {
+  const { file } = props;
+  return (
+    <div className="no-log-hint">
+      <div className="content">
+        <p>No line filtered. Please revisit the search patterns:</p>
+        <ul>
+          {file.searchKeywordsArray.map((keyword, i) => (
+            <li key={i}>{keyword}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+});
+
 const AutoSizedList = observer(
   (props: { file: LogFile; height: number; width: number }) => {
     const { file, height, width } = props;
@@ -141,23 +157,29 @@ const AutoSizedList = observer(
 
     const onScroll = useCallback((_props: ListOnScrollProps) => {}, []);
     return (
-      <List
-        ref={listRef}
-        outerRef={listOuterRef}
-        innerRef={listInnerRef}
-        className="List"
-        itemCount={file.filteredLines.length}
-        itemSize={15}
-        itemData={{
-          file,
-        }}
-        height={height}
-        width={width}
-        onItemsRendered={onItemsRendered}
-        onScroll={onScroll}
-      >
-        {LogLineRenderer}
-      </List>
+      <>
+        {file.filteredLines.length === 0 ? (
+          <NoLogLineHint file={file}></NoLogLineHint>
+        ) : (
+          <List
+            ref={listRef}
+            outerRef={listOuterRef}
+            innerRef={listInnerRef}
+            className="List"
+            itemCount={file.filteredLines.length}
+            itemSize={15}
+            itemData={{
+              file,
+            }}
+            height={height}
+            width={width}
+            onItemsRendered={onItemsRendered}
+            onScroll={onScroll}
+          >
+            {LogLineRenderer}
+          </List>
+        )}
+      </>
     );
   }
 );

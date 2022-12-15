@@ -256,3 +256,15 @@
 label {
   display: block;
 }
+
+.no-log-hint {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+
+  .content {
+    width: 50%;
+    max-width: 500px;
+  }
+}

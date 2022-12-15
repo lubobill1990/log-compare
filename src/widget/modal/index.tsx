@@ -44,6 +44,9 @@ export function Modal(props: {
       isOpen={isOpen}
       style={{
         content: contentStyle,
+        overlay: {
+          backgroundColor: 'rgb(0 0 0 / 78%)',
+        },
       }}
       contentLabel={title}
       shouldCloseOnEsc={true}

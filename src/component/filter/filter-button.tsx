@@ -1,25 +1,32 @@
 import { observer } from 'mobx-react-lite';
 
+import { useGlobalFilterStore } from '@/mobx/filter';
 import { useUIStore } from '@/mobx/ui-store';
 
-import { LoadFilterModal } from './load-filter-modal';
+import { AllFiltersModal } from './all-filters-modal';
 import { SaveFilterModal } from './save-filter-modal';
 
 export const LoadFilterButton = observer(() => {
   const uiStore = useUIStore();
   return (
     <>
-      <LoadFilterModal></LoadFilterModal>
-      <button onClick={uiStore.toggleLoadFilterModal}>Load filter</button>
+      <AllFiltersModal></AllFiltersModal>
+      <button onClick={uiStore.toggleLoadFilterModal}>All filters</button>
     </>
   );
 });
 
 export const SaveFilterButton = observer(() => {
   const uiStore = useUIStore();
+  const globalFilter = useGlobalFilterStore();
+
   return (
     <>
-      <SaveFilterModal></SaveFilterModal>
+      <SaveFilterModal
+        filter={globalFilter}
+        isOpen={uiStore.isSaveFilterModalVisible}
+        onClose={uiStore.toggleSaveFilterModel}
+      ></SaveFilterModal>
       <button onClick={uiStore.toggleSaveFilterModel}>Save filter</button>
     </>
   );

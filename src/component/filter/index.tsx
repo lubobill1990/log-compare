@@ -6,6 +6,7 @@ import { useGlobalFilterStore } from '@/mobx/filter';
 
 import { LoadFilterButton, SaveFilterButton } from './filter-button';
 import './filter.scss';
+import { SharedFilterListener } from './save-shared-filter';
 
 export const GlobalFilterRenderer = observer(() => {
   const globalFilter = useGlobalFilterStore();
@@ -24,12 +25,13 @@ export const GlobalFilterRenderer = observer(() => {
 
       <Field
         label="Global highlights"
-        value={globalFilter.hightlightText}
+        value={globalFilter.highlightText}
         onChange={(e: React.ChangeEvent) =>
-          globalFilter.setHightlightText((e.target as HTMLInputElement).value)
+          globalFilter.setHighlightText((e.target as HTMLInputElement).value)
         }
         placeholder="Separate with `,`"
       ></Field>
+      <SharedFilterListener></SharedFilterListener>
       <div className="filter-action">
         <SaveFilterButton></SaveFilterButton>
         <LoadFilterButton></LoadFilterButton>
