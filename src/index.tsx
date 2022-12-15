@@ -3,7 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ReactDOM from 'react-dom/client';
 
-import App from './app';
+import App from './App';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
