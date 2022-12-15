@@ -232,7 +232,12 @@
 }
 
 .pin {
-  color: rgb(107, 0, 0);
+  color: rgba(107, 0, 0, 0.744);
+  cursor: pointer;
+
+  &.pinned {
+    color: rgb(107, 0, 0);
+  }
 }
 
 .content {
@@ -267,4 +272,13 @@ label {
     width: 50%;
     max-width: 500px;
   }
+}
+
+a,
+button {
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: underline;
 }

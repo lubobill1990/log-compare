@@ -2,7 +2,7 @@ import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { observer } from 'mobx-react-lite';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FixedSizeList,
   FixedSizeList as List,
@@ -10,6 +10,7 @@ import {
   ListOnScrollProps,
 } from 'react-window';
 
+import { cx } from './common/cx';
 import { LogFile } from './mobx/log-file';
 import { useSharedStateStore } from './mobx/shared-state';
 import { ContextMenuKey } from './mobx/ui-store';
@@ -31,6 +32,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
     data: { file },
   } = props;
 
+  const [hovered, setHovered] = useState(false);
   const line = file.filteredLines[index];
   const isPinedLine = file.pinedLines.has(line.lineNumber);
   const sharedStateStore = useSharedStateStore();
@@ -53,6 +55,8 @@ const LogLineRenderer = observer((props: IRowProps) => {
         file.selectLine(line.lineNumber);
         sharedStateStore.setFocusTimestamp(line.timestamp);
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div
         className="line-head"
@@ -66,10 +70,18 @@ const LogLineRenderer = observer((props: IRowProps) => {
       >
         {line.lineNumber + 1}
         <div className="line-mark">
-          {isPinedLine && (
+          {(isPinedLine || hovered) && (
             <FontAwesomeIcon
               icon={faLocationPin}
-              className="pin"
+              className={cx('pin', isPinedLine && 'pinned')}
+              onClick={(e) => {
+                if (isPinedLine) {
+                  file.unpinLine(line.lineNumber);
+                } else {
+                  file.pinLine(line.lineNumber);
+                }
+                e.stopPropagation();
+              }}
             ></FontAwesomeIcon>
           )}
         </div>
@@ -139,8 +151,10 @@ const AutoSizedList = observer(
         );
         const { filteredLines } = file;
         const scrolledLine = filteredLines[scrollOffsetIndex];
-
-        if (scrolledLine && file.isFocused) {
+        const selectedTimestampNotVisible =
+          file.selectedTimestamp < filteredLines[visibleStartIndex].timestamp &&
+          file.selectedTimestamp > filteredLines[visibleStopIndex].timestamp;
+        if (scrolledLine && file.isFocused && !selectedTimestampNotVisible) {
           sharedStateStore.setFocusTimestamp(scrolledLine.timestamp);
         }
       },

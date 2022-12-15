@@ -82,7 +82,7 @@ export class SharedStateStore implements SharedState {
       return;
     }
     this.focusTimestamp = timestamp;
-    this.logFiles.selectTimestamp(timestamp);
+    this.logFiles.selectNearestTimestamp(timestamp);
     if (broadcast) {
       this.broadcast();
     }

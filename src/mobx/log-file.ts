@@ -247,6 +247,14 @@ export class LogFile {
     }
   }
 
+  selectNearestTimestamp(timestamp: number) {
+    const lineNumber = this.getClosestLineIndexFromTimestmap(timestamp);
+    const nearestTimestamp = this.lines[lineNumber]?.timestamp;
+    if (nearestTimestamp) {
+      this.selectTimestamp(nearestTimestamp);
+    }
+  }
+
   pinLine(lineNumber: number) {
     this.pinedLines.set(lineNumber, true);
     this.storageProvider.savePinedLines(this.pinedLines);
@@ -384,8 +392,8 @@ export class LogFiles {
     }
   }
 
-  selectTimestamp(timestamp: number) {
-    this.files.forEach((file) => file.selectTimestamp(timestamp));
+  selectNearestTimestamp(timestamp: number) {
+    this.files.forEach((file) => file.selectNearestTimestamp(timestamp));
   }
 
   get size() {
