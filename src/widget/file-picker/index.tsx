@@ -3,9 +3,10 @@ import React, { useRef } from 'react';
 export function FilePicker(props: {
   children: React.ReactNode;
   onFilesPicked: (files: File[]) => void;
+  multiple?: boolean;
   extensions?: string[];
 }) {
-  const { children, onFilesPicked, extensions } = props;
+  const { children, onFilesPicked, extensions, multiple } = props;
   const parsedExt = extensions ? extensions.join() : undefined;
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -16,6 +17,7 @@ export function FilePicker(props: {
         ref={fileInput}
         type="file"
         accept={parsedExt}
+        multiple={multiple === true}
         onChange={(event) => {
           if (event.target.files) {
             onFilesPicked(Array.from(event.target.files));

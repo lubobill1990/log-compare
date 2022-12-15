@@ -29,6 +29,7 @@ const DropzoneHint = observer(() => {
       <div>
         Drop log files here or{' '}
         <FilePicker
+          multiple={true}
           onFilesPicked={(files) => {
             createLogFiles(files);
           }}
