@@ -35,7 +35,7 @@ export class SharedStateStore implements SharedState {
         const { type, payload } = event.data as PostedData;
         if (type === 'send') {
           if (payload.focusTimestamp) {
-            this.setFocusTimestamp(payload.focusTimestamp);
+            this.setFocusTimestamp(payload.focusTimestamp, false);
           }
           if (payload.highlightText) {
             this.setHighlightText(payload.highlightText);
@@ -77,12 +77,15 @@ export class SharedStateStore implements SharedState {
     });
   }
 
-  setFocusTimestamp(timestamp: number) {
-    if (this.focusTimestamp !== timestamp) {
+  setFocusTimestamp(timestamp: number, broadcast = true) {
+    if (this.focusTimestamp === timestamp) {
       return;
     }
     this.focusTimestamp = timestamp;
     this.logFiles.selectTimestamp(timestamp);
+    if (broadcast) {
+      this.broadcast();
+    }
   }
 
   setHighlightText(text: string) {
