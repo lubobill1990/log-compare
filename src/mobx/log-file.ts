@@ -5,6 +5,7 @@ import getSha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LogLine } from '@/interface';
+import { binarySearchClosestLog, formatTimestamp } from '@/util';
 import { StorageProvider } from '@/utils/storage-provider';
 
 import { Filter } from './filter';
@@ -63,27 +64,19 @@ class LogFileStorageProvider extends StorageProvider {
   }
 }
 
-function getDateFromLine(
-  line: string,
-  previousDate: Date,
-  startFromIndex: number = 57
-) {
+function getDateFromLine(line: string) {
   if (line.search(/^\s/) === 0) {
-    return { dateString: '', date: previousDate };
+    return null;
   }
 
-  for (
-    let i = startFromIndex === 0 ? 57 : Math.min(startFromIndex, line.length);
-    i > 23;
-    i -= 1
-  ) {
+  for (let i = 57; i > 23; i -= 1) {
     const dateString = line.substring(0, i);
     const date = new Date(dateString);
     if (date.toString() !== 'Invalid Date') {
       return { dateString, date };
     }
   }
-  return { dateString: '', date: previousDate };
+  return null;
 }
 
 const minimumValidTimestamp = new Date('2020-01-01').getTime();
@@ -150,47 +143,78 @@ export class LogFile {
     });
   }
 
+  private formatTimestamp(timestamp: number) {
+    // parse to hour:minute:second.millisecond
+    const date = new Date(timestamp);
+    return `${date.getHours().toString().padStart(2, '0')}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date
+      .getMilliseconds()
+      .toString()
+      .padStart(3, '0')}`;
+  }
+
+  private processLine(line: string, index: number) {
+    const res = getDateFromLine(line);
+    if (res === null) {
+      return new LogLine(0, line, index);
+    }
+    const { date, dateString } = res;
+    const timestamp = date.getTime();
+
+    const thisLine: string = `${this.formatTimestamp(timestamp)} - ${line.slice(
+      dateString.length
+    )}`;
+
+    return new LogLine(timestamp, thisLine, index);
+  }
+
   private getLinesFromContent(content: string) {
     const rawLines = content.split('\n');
-    let previousDate = new Date();
-    let previousDateString = '';
-    let orderDiffSum = 0;
+    if (rawLines.length === 0) {
+      return [];
+    }
+    let previousTimestamp = 0;
+    const lineIndexesNeedReprocess: number[] = [];
     const logLines = rawLines.map((line, index) => {
-      const { date, dateString } = getDateFromLine(
-        line,
-        previousDate,
-        previousDateString.length
-      );
-      const timestamp = date.getTime();
-
-      if (dateString.length > 0 && isValidTimestamp(timestamp)) {
-        const timeDiff = timestamp - previousDate.getTime();
-        if (timeDiff > 0) {
-          orderDiffSum += 1;
-        } else if (timeDiff < 0) {
-          orderDiffSum -= 1;
+      const logLine = this.processLine(line, index);
+      if (logLine.timestamp === 0) {
+        if (previousTimestamp !== 0) {
+          logLine.timestamp = previousTimestamp;
+          logLine.content = `${this.formatTimestamp(previousTimestamp)} - ${
+            logLine.content
+          }`;
+        } else {
+          lineIndexesNeedReprocess.push(index);
         }
+      } else {
+        previousTimestamp = logLine.timestamp;
       }
-      previousDate = date;
-      previousDateString = dateString;
-
-      const thisLine: string = `${date
-        .getHours()
-        .toString()
-        .padStart(2, '0')}:${date
-        .getMinutes()
-        .toString()
-        .padStart(2, '0')}:${date
-        .getSeconds()
-        .toString()
-        .padStart(2, '0')}.${date
-        .getMilliseconds()
-        .toString()
-        .padStart(3, '0')} - ${line.slice(dateString.length)}`;
-      return new LogLine(timestamp, thisLine, index);
+      return logLine;
     });
 
-    return orderDiffSum > 0
+    // iterate on the lines that need reprocess from the end to the beginning
+    for (let i = lineIndexesNeedReprocess.length - 1; i >= 0; i -= 1) {
+      const index = lineIndexesNeedReprocess[i];
+      const logLine = logLines[index];
+      const nextLine = logLines[index + 1];
+      if (nextLine?.timestamp > 0) {
+        logLine.timestamp = nextLine.timestamp;
+        logLine.content = `${this.formatTimestamp(nextLine.timestamp)} - ${
+          logLine.content
+        }`;
+      }
+    }
+
+    // compare the timestamp between the last and the first
+    // if the first is smaller than the last, reverse the lines
+    // if the first is bigger than the last, do nothing
+    // if the first is equal to the last, do nothing
+    const orderDiffSum =
+      logLines[0].timestamp - logLines[logLines.length - 1].timestamp;
+
+    return orderDiffSum < 0
       ? logLines.reverse().map((logLine) => ({
           ...logLine,
           lineNumber: logLines.length - logLine.lineNumber - 1,
@@ -247,9 +271,15 @@ export class LogFile {
     }
   }
 
-  selectNearestTimestamp(timestamp: number) {
-    const lineNumber = this.getClosestLineIndexFromTimestmap(timestamp);
-    const nearestTimestamp = this.lines[lineNumber]?.timestamp;
+  selectNearestTimestamp(targetTimestamp: number) {
+    const lineIndex = this.getClosestLineIndexFromTimestmap(targetTimestamp);
+    const nearestTimestamp = this.filteredLines[lineIndex]?.timestamp;
+    console.log(
+      'selectNearestTimestamp',
+      formatTimestamp(nearestTimestamp),
+      formatTimestamp(targetTimestamp),
+      lineIndex
+    );
     if (nearestTimestamp) {
       this.selectTimestamp(nearestTimestamp);
     }
@@ -299,7 +329,7 @@ export class LogFile {
     return this.selectedTimestamps[0];
   }
 
-  get filteredLineNumberOfSelectedTimestamp() {
+  get filteredLineIndexOfSelectedTimestamp() {
     return this.getClosestLineIndexFromTimestmap(this.selectedTimestamp);
   }
 
@@ -310,58 +340,13 @@ export class LogFile {
     ].filter((v) => v);
   }
 
-  getClosestLineFromTimestamp(targetTimestamp: number, isInvertedOrder = true) {
-    const index = this.getClosestLineIndexFromTimestmap(
-      targetTimestamp,
-      isInvertedOrder
-    );
+  getClosestLineFromTimestamp(targetTimestamp: number) {
+    const index = this.getClosestLineIndexFromTimestmap(targetTimestamp);
     return this.filteredLines[index];
   }
 
-  getClosestLineIndexFromTimestmap(
-    targetTimestamp: number,
-    isInvertedOrder: boolean = true
-  ) {
-    const orderedLogLines = this.filteredLines;
-    let start = 0;
-    let end = orderedLogLines.length - 1;
-
-    if (isInvertedOrder) {
-      while (start <= end) {
-        const middleIndex = Math.floor((start + end) / 2);
-        const middleTimestamp = orderedLogLines[middleIndex].timestamp;
-        if (middleTimestamp === targetTimestamp) {
-          // found the key
-          return middleIndex;
-        }
-        if (middleTimestamp < targetTimestamp) {
-          // continue searching to the right
-          end = middleIndex - 1;
-        } else {
-          // search searching to the left
-          start = middleIndex + 1;
-        }
-      }
-    } else {
-      while (start <= end) {
-        const middleIndex = Math.floor((start + end) / 2);
-        const middleTimestamp = orderedLogLines[middleIndex].timestamp;
-        if (middleTimestamp === targetTimestamp) {
-          // found the key
-          return middleIndex;
-        }
-        if (middleTimestamp < targetTimestamp) {
-          // continue searching to the right
-          start = middleIndex + 1;
-        } else {
-          // search searching to the left
-          end = middleIndex - 1;
-        }
-      }
-    }
-
-    // key wasn't found
-    return Math.floor((start + end) / 2);
+  getClosestLineIndexFromTimestmap(targetTimestamp: number) {
+    return binarySearchClosestLog(this.filteredLines, targetTimestamp, true);
   }
 }
 

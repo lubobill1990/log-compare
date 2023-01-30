@@ -161,7 +161,7 @@ const AutoSizedList = observer(
       [listOuterRef, scrollerWidth, listInnerRef, file, sharedStateStore]
     );
 
-    const localTargetIndex = file.filteredLineNumberOfSelectedTimestamp;
+    const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
 
     useEffect(() => {
       if (listRef.current) {
