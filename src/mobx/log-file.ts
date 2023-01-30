@@ -4,7 +4,7 @@ import { createContext, useContext } from 'react';
 import getSha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 
-import { LogLine } from '@/interface';
+import { LogLevel, LogLine } from '@/interface';
 import { binarySearchClosestLog, formatTimestamp } from '@/util';
 import { StorageProvider } from '@/utils/storage-provider';
 
@@ -65,8 +65,13 @@ class LogFileStorageProvider extends StorageProvider {
 }
 
 function getDateFromLine(line: string) {
-  if (line.search(/^\s/) === 0) {
+  if (line.startsWith(' ')) {
     return null;
+  }
+
+  if (line.search(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} /) === 0) {
+    const dateString = line.substring(0, 23);
+    return { dateString, date: new Date(`${dateString}+00:00`) };
   }
 
   for (let i = 57; i > 23; i -= 1) {
@@ -155,6 +160,32 @@ export class LogFile {
       .padStart(3, '0')}`;
   }
 
+  private getLogLevel(line: string) {
+    const webLogIndex = line.search(/(?<=\d{3}Z )(Inf|War|Err) /);
+    if (webLogIndex >= 0) {
+      return {
+        Inf: LogLevel.INFO,
+        War: LogLevel.WARN,
+        Err: LogLevel.ERROR,
+      }[line.slice(webLogIndex, webLogIndex + 3)];
+    }
+
+    const desktopLogIndex = line.search(
+      /(?<=-- )(error|warning|event|info) --/
+    );
+
+    if (desktopLogIndex >= 0) {
+      return {
+        erro: LogLevel.ERROR,
+        warn: LogLevel.WARN,
+        even: LogLevel.DEBUG,
+        info: LogLevel.INFO,
+      }[line.slice(desktopLogIndex, desktopLogIndex + 4)];
+    }
+
+    return undefined;
+  }
+
   private processLine(line: string, index: number) {
     const res = getDateFromLine(line);
     if (res === null) {
@@ -167,7 +198,7 @@ export class LogFile {
       dateString.length
     )}`;
 
-    return new LogLine(timestamp, thisLine, index);
+    return new LogLine(timestamp, thisLine, index, this.getLogLevel(line));
   }
 
   private getLinesFromContent(content: string) {

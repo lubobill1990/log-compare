@@ -2,7 +2,13 @@ import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { observer } from 'mobx-react-lite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   FixedSizeList,
   FixedSizeList as List,
@@ -67,6 +73,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
             line.lineNumber - 1
           );
         }}
+        title={new Date(line.timestamp).toLocaleString()}
       >
         {line.lineNumber + 1}
         <div className="line-mark">
@@ -74,7 +81,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
             <FontAwesomeIcon
               icon={faLocationPin}
               className={cx('pin', isPinedLine && 'pinned')}
-              onClick={(e) => {
+              onClick={(e: MouseEvent) => {
                 if (isPinedLine) {
                   file.unpinLine(line.lineNumber);
                 } else {
