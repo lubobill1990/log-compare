@@ -5,7 +5,7 @@ import getSha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LogLevel, LogLine } from '@/interface';
-import { binarySearchClosestLog, formatTimestamp } from '@/util';
+import { binarySearchClosestLog } from '@/util';
 import { StorageProvider } from '@/utils/storage-provider';
 
 import { Filter } from './filter';
@@ -69,9 +69,14 @@ function getDateFromLine(line: string) {
     return null;
   }
 
-  if (line.search(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} /) === 0) {
+  if (line.search(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \[/) === 0) {
     const dateString = line.substring(0, 23);
     return { dateString, date: new Date(`${dateString}+00:00`) };
+  }
+
+  if (line.search(/\d{4}-\d{2}-\d{2}-\d{2}:\d{2}:\d{2}.\d{3}/) === 0) {
+    const dateString = `${line.substring(0, 10)} ${line.substring(11, 23)}`;
+    return { dateString, date: new Date(`${dateString}`) };
   }
 
   for (let i = 57; i > 23; i -= 1) {
@@ -305,12 +310,6 @@ export class LogFile {
   selectNearestTimestamp(targetTimestamp: number) {
     const lineIndex = this.getClosestLineIndexFromTimestmap(targetTimestamp);
     const nearestTimestamp = this.filteredLines[lineIndex]?.timestamp;
-    console.log(
-      'selectNearestTimestamp',
-      formatTimestamp(nearestTimestamp),
-      formatTimestamp(targetTimestamp),
-      lineIndex
-    );
     if (nearestTimestamp) {
       this.selectTimestamp(nearestTimestamp);
     }
