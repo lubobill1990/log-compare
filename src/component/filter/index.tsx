@@ -20,7 +20,7 @@ export const GlobalFilterRenderer = observer(() => {
         onChange={(e: React.ChangeEvent) =>
           globalFilter.setSearchKeywords((e.target as HTMLInputElement).value)
         }
-        placeholder="Separate keydwords with `,`. Regular expression supported as `/search1|search2/`. `AND` condition supported with regular express as `/a/&&/b/`."
+        placeholder="Keydword match: `keyword1&&keyword2,keyword3&&keyword4`, `,` means `or` and `&&` means `and`. RegExp match: `reg::regexp&&regexp2`."
       ></Field>
 
       <Field

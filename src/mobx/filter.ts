@@ -11,14 +11,6 @@ export interface IFilter {
   name: string;
 }
 
-function getKeywordsListLowerCase(value: string) {
-  return value
-    .toLowerCase()
-    .split(',')
-    .map((v) => v.trim())
-    .filter((v) => v);
-}
-
 export class Filter implements IFilter {
   constructor(
     public searchKeywords = '',
@@ -37,22 +29,39 @@ export class Filter implements IFilter {
   }
 
   get keywordFilter() {
-    const search = this.searchKeywords;
-    if (search.startsWith('/') && search.endsWith('/') && search.length > 2) {
+    const search = this.searchKeywords.trim();
+    if (search.startsWith('reg::')) {
       const searches = search
-        .slice(1, -1)
-        .split('/&&/')
+        .slice(5)
+        .split('&&')
         .map((s) => new RegExp(s));
+      if (searches.length === 0) {
+        return () => true;
+      }
       return (line: LogLine) =>
         searches.every((reg) => line.content.search(reg) > -1);
     }
-    const keywordsList = getKeywordsListLowerCase(search);
-    if (keywordsList.length === 0) {
-      return () => true;
-    }
+
+    const orMatcheGroups = search
+      .toLowerCase()
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v)
+      .map((match) =>
+        match
+          .split('&&')
+          .map((v) => v.trim())
+          .filter((v) => v)
+      );
+
     return (line: LogLine) => {
+      if (orMatcheGroups.length === 0) {
+        return true;
+      }
       const lowerLine = line.content.toLowerCase();
-      return keywordsList.some((keyword) => lowerLine.indexOf(keyword) >= 0);
+      return orMatcheGroups.some((andMatches) =>
+        andMatches.every((keyword) => lowerLine.indexOf(keyword) >= 0)
+      );
     };
   }
 }
