@@ -1,5 +1,6 @@
-import { cx } from '@/common/cx';
 import React from 'react';
+
+import { cx } from '@/components/common/cx';
 
 import { Dropdown, DropdownContent, DropdownTrigger } from '.';
 

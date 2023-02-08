@@ -5,6 +5,7 @@ import {
   ActivityBarEntry,
   ActivityBarSlot,
   SideBarGeneratorSlot,
+  SideBarTitle,
 } from '@/layout';
 
 const EntryName = 'search-panel';
@@ -18,7 +19,11 @@ export const Entry = observer(() => {
 });
 
 export const SideBarContent = observer(() => {
-  return <div>Search</div>;
+  return (
+    <div>
+      <SideBarTitle title="Search"></SideBarTitle>
+    </div>
+  );
 });
 
 export const SearchPanelRegister = observer(() => {

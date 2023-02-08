@@ -1,6 +1,6 @@
 import ReactModal from 'react-modal';
 
-import { cx } from '@/common/cx';
+import { cx } from '@/components/common/cx';
 
 import './index.scss';
 

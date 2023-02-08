@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
-import { DebouncedInputField } from './common/form';
+import { DebouncedInputField } from './components/common/form';
+import { ContextMenuTrigger } from './components/widget/context-menu';
 import { LogFile } from './mobx/log-file';
 import { ContextMenuKey, useUIStore } from './mobx/ui-store';
-import { ContextMenuTrigger } from './widget/context-menu';
 
 export const LogFileHeader = observer((props: { file: LogFile }) => {
   const { file } = props;

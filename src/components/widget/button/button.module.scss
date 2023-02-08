@@ -1,0 +1,38 @@
+@mixin btn() {
+  line-height: 1.25rem;
+  font-weight: 600;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 0.8125rem;
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+  border-radius: 0.375rem;
+  pointer-events: auto;
+  cursor: pointer;
+  border: none;
+}
+
+.primary {
+  --tw-bg-opacity: 1;
+  background-color: rgb(79 70 229 / var(--tw-bg-opacity));
+  margin-right: 1rem;
+  color: #fff;
+
+  @include btn();
+}
+
+.secondary {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
+
+  --tw-ring-color: rgba(51, 65, 85, 0.1);
+  --tw-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  @include btn();
+}

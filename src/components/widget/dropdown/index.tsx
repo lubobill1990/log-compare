@@ -1,15 +1,15 @@
-import cx from "classnames";
+import cx from 'classnames';
 import React, {
-  cloneElement,
   JSXElementConstructor,
   ReactElement,
+  cloneElement,
   useCallback,
   useEffect,
   useState,
-} from "react";
+} from 'react';
 
-import styles from "./dropdown.module.scss";
-import DropdownTriangleIcon from "./dropdown-triangle.svg";
+import DropdownTriangleIcon from './dropdown-triangle.svg';
+import styles from './dropdown.module.scss';
 
 interface IDropdownContentProps {
   children: React.ReactNode;
@@ -64,15 +64,16 @@ export const Dropdown = React.memo((props: IDropdownProps) => {
     [isActive, setIsActive]
   );
   useEffect(() => {
-    window.addEventListener("click", onWindowClick);
+    window.addEventListener('click', onWindowClick);
     return () => {
-      window.removeEventListener("click", onWindowClick);
+      window.removeEventListener('click', onWindowClick);
     };
   }, [onWindowClick]);
   const boundChildren = React.Children.map(
     children as ReactElement[],
     (child: ReactElement) => {
-      let res: ReactElement<any, string | JSXElementConstructor<any>> | null = null;
+      let res: ReactElement<any, string | JSXElementConstructor<any>> | null =
+        null;
       if (child) {
         if (child.type === DropdownTrigger) {
           const originalOnClick = child.props.onClick;
@@ -96,8 +97,8 @@ export const Dropdown = React.memo((props: IDropdownProps) => {
       {...restProps}
       className={cx(
         styles.dropdown,
-        isActive && styles["dropdown--active"],
-        disabled && styles["dropdown--disabled"],
+        isActive && styles['dropdown--active'],
+        disabled && styles['dropdown--disabled'],
         className
       )}
     >
@@ -106,4 +107,4 @@ export const Dropdown = React.memo((props: IDropdownProps) => {
   );
 });
 
-Dropdown.displayName = "Dropdown";
+Dropdown.displayName = 'Dropdown';

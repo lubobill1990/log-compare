@@ -52,7 +52,14 @@ $sideBarBg: #eaeaea;
 
 .sideBar {
   min-width: 245px;
+  width: 350px;
   background-color: $sideBarBg;
+  overflow: auto;
+}
+
+.sideBarTitle {
+  text-transform: uppercase;
+  padding: 1rem;
 }
 
 .mainView {
@@ -70,14 +77,18 @@ $sideBarBg: #eaeaea;
 
 .colResizer {
   width: 8px;
-  margin: 0 0 0 -8px;
+  margin: 0 -8px 0 0;
   cursor: col-resize;
+  position: relative;
+  z-index: 1;
 }
 
 .rowResizer {
-  height: 8px;
-  margin: -8px 0 0;
-  cursor: row-resize;
+  width: 8px;
+  margin: 0 0 -8px;
+  cursor: col-resize;
+  position: relative;
+  z-index: 1;
 }
 
 .toggle {

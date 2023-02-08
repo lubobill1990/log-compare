@@ -1,0 +1,29 @@
+.root {
+}
+.buttonWrap {
+  display: flex;
+  justify-content: center;
+}
+.directory {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.file {
+  white-space: nowrap;
+}
+
+.caret {
+  height: 7px;
+}
+
+.subItems {
+  padding-left: 16px;
+}
+
+.title {
+  cursor: pointer;
+  &:hover {
+    color: #666;
+  }
+}

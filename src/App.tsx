@@ -1,10 +1,12 @@
 import { observer } from 'mobx-react-lite';
 import ReactModal from 'react-modal';
 
-import { GlobalFilterRenderer } from '@/component/filter';
+import { GlobalFilterRenderer } from '@/components/filter';
 
 import classes from './app.module.scss';
 import './app.scss';
+import { ContextMenus } from './components/widget/context-menu';
+import { FilePicker } from './components/widget/file-picker';
 import { useCreateLogFiles } from './file-dropzone';
 import { FileExplorerRegister } from './file-explorer';
 import { AppLayout, LayoutSlot } from './layout';
@@ -13,8 +15,6 @@ import { LogFileHeader } from './log-file-header';
 import { SlotName } from './mobx/layout-store';
 import { LogFile, useLogFlieStore } from './mobx/log-file';
 import { SearchPanelRegister } from './search-panel';
-import { ContextMenus } from './widget/context-menu';
-import { FilePicker } from './widget/file-picker';
 
 ReactModal.setAppElement('#root');
 

@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
-import { DebouncedInputField } from '@/common/form';
+import { DebouncedInputField } from '@/components/common/form';
 import { useGlobalFilterStore } from '@/mobx/filter';
 
 import { LoadFilterButton, SaveFilterButton } from './filter-button';

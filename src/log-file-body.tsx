@@ -16,12 +16,12 @@ import {
   ListOnScrollProps,
 } from 'react-window';
 
-import { cx } from './common/cx';
+import { cx } from './components/common/cx';
+import { ContextMenuTrigger } from './components/widget/context-menu';
 import { LogFile } from './mobx/log-file';
 import { useSharedStateStore } from './mobx/shared-state';
 import { ContextMenuKey } from './mobx/ui-store';
 import { useResizeObserver } from './resize-observer';
-import { ContextMenuTrigger } from './widget/context-menu';
 
 interface IRowProps {
   index: number;

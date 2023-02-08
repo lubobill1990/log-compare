@@ -4,14 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-import { cx } from '@/common/cx';
+import { cx } from '@/components/common/cx';
+import { Modal, ModalActions } from '@/components/widget/modal';
 import {
   IFilter,
   useGlobalFilterStore,
   useStoredFiltersStore,
 } from '@/mobx/filter';
 import { useUIStore } from '@/mobx/ui-store';
-import { Modal, ModalActions } from '@/widget/modal';
 
 import './filter.scss';
 import { ShareLinkModal } from './share-link-modal';

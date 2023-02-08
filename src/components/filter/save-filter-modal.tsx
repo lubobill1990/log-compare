@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-import { DebouncedInputField, InputField } from '@/common/form';
+import { DebouncedInputField, InputField } from '@/components/common/form';
+import { Modal, ModalActions, ModalSize } from '@/components/widget/modal';
 import { IFilter, useStoredFiltersStore } from '@/mobx/filter';
-import { Modal, ModalActions, ModalSize } from '@/widget/modal';
 
 import './filter.scss';
 

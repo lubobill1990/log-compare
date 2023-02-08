@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useCallback, useMemo } from 'react';
 
-import { cx } from './common/cx';
+import { cx } from './components/common/cx';
 import { useFileDropzone } from './file-dropzone';
 import classes from './layout.module.scss';
 import { SlotName, useLayoutStore } from './mobx/layout-store';
@@ -104,6 +104,17 @@ export const SideBar = observer(() => {
   const node = useLayoutStore().getSlot(SlotName.sideBar);
   return <>{node && <div className={classes.sideBar}>{node}</div>}</>;
 });
+
+export const SideBarTitle = observer(
+  (props: { title: string; children?: React.ReactNode }) => {
+    return (
+      <div className={classes.sideBarTitle}>
+        {props.title}
+        {props.children}
+      </div>
+    );
+  }
+);
 
 export const MainView = observer(() => {
   const node = useLayoutStore().getSlot(SlotName.mainView);
