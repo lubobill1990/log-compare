@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
-import { Field } from './common/form';
+import { DebouncedInputField } from './common/form';
 import { LogFile } from './mobx/log-file';
 import { ContextMenuKey, useUIStore } from './mobx/ui-store';
 import { ContextMenuTrigger } from './widget/context-menu';
@@ -36,24 +36,20 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
       </ContextMenuTrigger>
 
       <div className="log-filters">
-        <Field
+        <DebouncedInputField
           className="log-filter"
           label="Search"
           value={file.filter.searchKeywords}
-          onChange={(e: React.ChangeEvent) =>
-            file.filter.setSearchKeywords((e.target as HTMLInputElement).value)
-          }
+          onChange={(value: string) => file.filter.setSearchKeywords(value)}
           placeholder="Input search pattern"
-        ></Field>
-        <Field
+        ></DebouncedInputField>
+        <DebouncedInputField
           className="log-filter"
           label="Highlights"
           value={file.filter.highlightText}
-          onChange={(e: React.ChangeEvent) =>
-            file.filter.setHighlightText((e.target as HTMLInputElement).value)
-          }
+          onChange={(value) => file.filter.setHighlightText(value)}
           placeholder="Separate with `,`"
-        ></Field>
+        ></DebouncedInputField>
       </div>
     </div>
   );

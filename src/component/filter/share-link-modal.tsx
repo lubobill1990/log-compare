@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
-import { Field } from '@/common/form';
+import { InputField } from '@/common/form';
 import { Modal, ModalActions, ModalSize } from '@/widget/modal';
 
 export const ShareLinkModal = observer(
@@ -23,11 +23,11 @@ export const ShareLinkModal = observer(
         onClose={() => setFilterShareLink('')}
         size={ModalSize.Small}
       >
-        <Field
+        <InputField
           label="Filter sharing URL"
           value={filterShareLink}
           inputStyle={{ width: '100%' }}
-        ></Field>
+        ></InputField>
         <ModalActions>
           <CopyToClipboard
             text={filterShareLink}

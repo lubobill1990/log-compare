@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
-import { Field } from '@/common/form';
+import { DebouncedInputField } from '@/common/form';
 import { useGlobalFilterStore } from '@/mobx/filter';
 
 import { LoadFilterButton, SaveFilterButton } from './filter-button';
@@ -12,25 +12,21 @@ export const GlobalFilterRenderer = observer(() => {
   const globalFilter = useGlobalFilterStore();
   return (
     <div className="global-footer">
-      <Field
+      <DebouncedInputField
         className="flex-1"
         inputClassName="flex-1"
         label="Global search"
         value={globalFilter.searchKeywords}
-        onChange={(e: React.ChangeEvent) =>
-          globalFilter.setSearchKeywords((e.target as HTMLInputElement).value)
-        }
+        onChange={(e) => globalFilter.setSearchKeywords(e)}
         placeholder="Keydword match: `keyword1&&keyword2,keyword3&&keyword4`, `,` means `or` and `&&` means `and`. RegExp match: `reg::regexp&&regexp2`."
-      ></Field>
+      ></DebouncedInputField>
 
-      <Field
+      <DebouncedInputField
         label="Global highlights"
         value={globalFilter.highlightText}
-        onChange={(e: React.ChangeEvent) =>
-          globalFilter.setHighlightText((e.target as HTMLInputElement).value)
-        }
+        onChange={(e) => globalFilter.setHighlightText(e)}
         placeholder="Separate with `,`"
-      ></Field>
+      ></DebouncedInputField>
       <SharedFilterListener></SharedFilterListener>
       <div className="filter-action">
         <SaveFilterButton></SaveFilterButton>

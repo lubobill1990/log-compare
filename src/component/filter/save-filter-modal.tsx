@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-import { Field } from '@/common/form';
+import { DebouncedInputField, InputField } from '@/common/form';
 import { IFilter, useStoredFiltersStore } from '@/mobx/filter';
 import { Modal, ModalActions, ModalSize } from '@/widget/modal';
 
@@ -57,24 +57,24 @@ export const SaveFilterModal = observer(
         size={ModalSize.Medium}
         className="save-filter-modal"
       >
-        <Field
+        <DebouncedInputField
           label="Filter name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setName(e)}
           inputClassName="flex-1"
-        ></Field>
-        <Field
+        ></DebouncedInputField>
+        <InputField
           label="Search pattern"
           value={filter.searchKeywords}
           disabled={true}
           inputClassName="flex-1"
-        ></Field>
-        <Field
+        ></InputField>
+        <InputField
           label="Highlight keywords"
           value={filter.highlightText}
           disabled={true}
           inputClassName="flex-1"
-        ></Field>
+        ></InputField>
 
         {errorMsgs.length > 0 && (
           <ul className="error">
