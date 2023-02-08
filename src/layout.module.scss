@@ -1,0 +1,98 @@
+$activityBarBg: #ddd;
+$sideBarBg: #eaeaea;
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cols {
+  display: flex;
+  flex: 1;
+}
+
+.root {
+  background-color: #ddd;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  font-family: 'Segoe UI', '-apple-system', BlinkMacSystemFont, Roboto,
+    'Helvetica Neue', Helvetica, Ubuntu, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+.activityBar {
+  width: 69px;
+  background-color: $activityBarBg;
+}
+.activityBarEntry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 69px;
+  cursor: pointer;
+  &:hover {
+    background-color: $sideBarBg;
+  }
+}
+.activityEntrySelected {
+  background-color: $sideBarBg;
+  position: relative;
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background-color: #007acc;
+  }
+}
+
+.sideBar {
+  min-width: 245px;
+  background-color: $sideBarBg;
+}
+
+.mainView {
+  min-width: 245px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.logPanel {
+  display: flex;
+  background: #fff;
+  flex: 1;
+}
+
+.colResizer {
+  width: 8px;
+  margin: 0 0 0 -8px;
+  cursor: col-resize;
+}
+
+.rowResizer {
+  height: 8px;
+  margin: -8px 0 0;
+  cursor: row-resize;
+}
+
+.toggle {
+  background: var(--border-color);
+  cursor: pointer;
+}
+
+.toggleToUp {
+  transform: rotate(-90deg);
+}
+
+.toggleToDown {
+  transform: rotate(90deg);
+}
+
+.toggleToLeft {
+  transform: rotate(180deg);
+}

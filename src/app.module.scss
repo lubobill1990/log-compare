@@ -1,0 +1,21 @@
+.app {
+  background-color: #ddd;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  font-family: 'Segoe UI', '-apple-system', BlinkMacSystemFont, Roboto,
+    'Helvetica Neue', Helvetica, Ubuntu, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+.logFile {
+  min-width: 400px;
+  overflow: hidden;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  &:not(:first-child) {
+    border-left: 1px solid #ddd;
+  }
+}

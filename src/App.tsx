@@ -3,11 +3,16 @@ import ReactModal from 'react-modal';
 
 import { GlobalFilterRenderer } from '@/component/filter';
 
+import classes from './app.module.scss';
 import './app.scss';
-import { useCreateLogFiles, useFileDropzone } from './file-dropzone';
+import { useCreateLogFiles } from './file-dropzone';
+import { FileExplorerRegister } from './file-explorer';
+import { AppLayout, LayoutSlot } from './layout';
 import { LogFileBody } from './log-file-body';
 import { LogFileHeader } from './log-file-header';
+import { SlotName } from './mobx/layout-store';
 import { LogFile, useLogFlieStore } from './mobx/log-file';
+import { SearchPanelRegister } from './search-panel';
 import { ContextMenus } from './widget/context-menu';
 import { FilePicker } from './widget/file-picker';
 
@@ -15,7 +20,7 @@ ReactModal.setAppElement('#root');
 
 const LogFileRenderer = observer(({ file }: { file: LogFile }) => {
   return (
-    <div className="file-wrapper">
+    <div className={classes.logFile}>
       <LogFileHeader file={file}></LogFileHeader>
       <LogFileBody file={file}></LogFileBody>
     </div>
@@ -46,20 +51,33 @@ const DropzoneHint = observer(() => {
   );
 });
 
-const App = observer(() => {
-  const dropRef = useFileDropzone();
+const LogPanel = observer(() => {
   const logFileStore = useLogFlieStore();
+
   return (
-    <div className="App" ref={dropRef}>
-      <div className="vertical-compare-zone">
-        {logFileStore.size === 0 && <DropzoneHint></DropzoneHint>}
-        {logFileStore.files.map((logFile) => (
-          <LogFileRenderer key={logFile.id} file={logFile}></LogFileRenderer>
-        ))}
-      </div>
+    <>
+      {logFileStore.size === 0 && <DropzoneHint></DropzoneHint>}
+      {logFileStore.files.map((logFile) => (
+        <LogFileRenderer key={logFile.id} file={logFile}></LogFileRenderer>
+      ))}
+    </>
+  );
+});
+
+const App = observer(() => {
+  return (
+    <>
+      <LayoutSlot slotId={SlotName.searchBar}>
+        <GlobalFilterRenderer></GlobalFilterRenderer>
+      </LayoutSlot>
+      <LayoutSlot slotId={SlotName.logPanel}>
+        <LogPanel></LogPanel>
+      </LayoutSlot>
+      <FileExplorerRegister></FileExplorerRegister>
+      <SearchPanelRegister></SearchPanelRegister>
+      <AppLayout></AppLayout>
       <ContextMenus></ContextMenus>
-      <GlobalFilterRenderer></GlobalFilterRenderer>
-    </div>
+    </>
   );
 });
 

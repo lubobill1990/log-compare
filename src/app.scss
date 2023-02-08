@@ -6,9 +6,6 @@
   width: 100vw;
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', '-apple-system', BlinkMacSystemFont, Roboto,
-    'Helvetica Neue', Helvetica, Ubuntu, Arial, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol';
 }
 
 .vertical-compare-zone {
@@ -17,18 +14,6 @@
   flex: 1;
 }
 
-.file-wrapper {
-  min-width: 400px;
-  overflow: hidden;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.file-wrapper + .file-wrapper {
-  margin-left: 1rem;
-}
 
 .log-header {
   box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
