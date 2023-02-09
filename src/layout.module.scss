@@ -54,12 +54,20 @@ $sideBarBg: #eaeaea;
   min-width: 245px;
   width: 350px;
   background-color: $sideBarBg;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .sideBarTitle {
   text-transform: uppercase;
   padding: 1rem;
+}
+
+.sideBarBody {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  flex-direction: column;
 }
 
 .mainView {

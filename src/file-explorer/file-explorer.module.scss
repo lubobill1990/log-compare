@@ -1,9 +1,13 @@
 .root {
 }
+
 .buttonWrap {
   display: flex;
   justify-content: center;
+  height: 100%;
+  align-items: center;
 }
+
 .directory {
   white-space: nowrap;
   font-size: 13px;
@@ -21,7 +25,23 @@
   padding-left: 16px;
 }
 
+.noTitleDirectoryItem {
+  padding-left: 0;
+}
+
 .title {
+  cursor: pointer;
+  &:hover {
+    color: #666;
+  }
+}
+.itemTitle {
+  flex: 1;
+}
+.listItem {
+  display: flex;
+}
+.delete {
   cursor: pointer;
   &:hover {
     color: #666;

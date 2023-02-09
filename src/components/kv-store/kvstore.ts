@@ -29,3 +29,18 @@ export async function clear() {
 export async function keys() {
   return (await initOrGetDb()).getAllKeys('keyval');
 }
+export async function all() {
+  return (await initOrGetDb()).getAll('keyval');
+}
+export async function allWithKeys() {
+  const db = await initOrGetDb();
+  let cursor = await db.transaction('keyval').store.openCursor();
+
+  const result = new Map();
+  while (cursor) {
+    result.set(cursor.key, cursor.value);
+    cursor = await cursor.continue();
+  }
+
+  return result;
+}

@@ -1,136 +1,75 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
 import { createContext, useContext } from 'react';
 
-import {
-  ApiClientStore,
-  apiClientStore as globalApiClientStore,
-} from '@/components/api-client/api-client-store';
-import { get, set } from '@/components/kv-store/kvstore';
+import { allWithKeys, del, set } from '@/components/kv-store/kvstore';
 import { Nullable } from '@/interfaces/common';
 
 import { FileSystemDirectory } from './file-system-directory';
 
-async function verifyPermission(
-  fileHandle: FileSystemHandle,
-  withWrite: boolean
-) {
-  const opts: FileSystemHandlePermissionDescriptor = {};
-  if (withWrite) {
-    opts.mode = 'readwrite';
-  } else {
-    opts.mode = 'read';
-  }
-
-  // Check if we already have permission, if so, return true.
-  if ((await fileHandle.queryPermission(opts)) === 'granted') {
-    return true;
-  }
-
-  // Request permission to the file, if the user grants permission, return true.
-  if ((await fileHandle.requestPermission(opts)) === 'granted') {
-    return true;
-  }
-
-  // The user did not grant permission, return false.
-  return false;
-}
-
 export class FileSystemStore {
-  isPermissionGranted = false;
+  workspaceDirectory: Nullable<FileSystemDirectory> = null;
 
-  isPermissionVerified = false;
+  historyDirectories: FileSystemDirectory[] = [];
 
-  isGrantPermissionDialogHidden = false;
+  historyDirectoryMap = new Map<string, FileSystemDirectory>();
 
-  fileSystemHandleApiAvailable = false;
-
-  forceHideAllDialogs = false;
-
-  directoryHandle: Nullable<FileSystemDirectoryHandle> = null;
-
-  constructor(private apiClientStore: ApiClientStore) {
+  constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  get isGrantPermissionDialogVisible() {
-    return (
-      !this.isPermissionGranted &&
-      this.directoryHandle !== null &&
-      !this.isGrantPermissionDialogHidden &&
-      !this.forceHideAllDialogs
-    );
-  }
-
-  get isDirectoryHandlePickerModalVisible() {
-    return (
-      !this.isGrantPermissionDialogVisible &&
-      !this.isPermissionGranted &&
-      !this.forceHideAllDialogs
-    );
-  }
-
-  setForceHideAllDialogs(val: boolean) {
-    this.forceHideAllDialogs = val;
-  }
-
-  hideGrantPermissionDialog() {
-    this.isGrantPermissionDialogHidden = true;
-  }
-
-  showGrantPermissionDialog() {
-    this.isGrantPermissionDialogHidden = false;
-  }
-
-  setDirectoryHandle(directoryHandle: Nullable<FileSystemDirectoryHandle>) {
-    this.directoryHandle = directoryHandle;
-  }
-
-  grantPermission(withWrite = false) {
-    if (this.directoryHandle === null) {
+  async setWorkspaceDirectory(
+    directory: Nullable<FileSystemDirectory>,
+    withWrite = false
+  ) {
+    if (directory === null) {
+      runInAction(() => {
+        this.workspaceDirectory = null;
+      });
       return;
     }
-    this.isPermissionGranted = true;
-    verifyPermission(this.directoryHandle, withWrite).then((result) => {
-      if (!result || this.directoryHandle === null) {
-        alert('Permission denied');
-      } else {
-        this.setIsPermissionVerified(true);
-      }
+
+    const result = await directory.verifyPermission(withWrite);
+    if (result) {
+      runInAction(() => {
+        this.workspaceDirectory = directory;
+
+        Array.from(this.historyDirectoryMap.entries())
+          .filter(([_key, value]) => {
+            return this.workspaceDirectory?.isSameItem(value);
+          })
+          .forEach(([key]) => {
+            this.deleteHistoryDirectory(key);
+          });
+        const newId = Date.now().toString();
+        set(newId, this.workspaceDirectory?.directoryHandle);
+        this.historyDirectoryMap.set(newId, this.workspaceDirectory);
+      });
+    }
+  }
+
+  async loadHistoryDirectories() {
+    const res = await allWithKeys();
+    runInAction(() => {
+      this.historyDirectoryMap = new Map(
+        Array.from(res).map(([key, value]) => [
+          key,
+          new FileSystemDirectory(value as FileSystemDirectoryHandle),
+        ])
+      );
     });
   }
 
-  setIsPermissionVerified(val: boolean) {
-    this.isPermissionVerified = val;
+  deleteHistoryDirectory(key: string) {
+    this.historyDirectoryMap.delete(key);
+    del(key);
   }
 
-  async openFilePicker() {
-    const handle = await window.showDirectoryPicker();
-    if (handle) {
-      this.setDirectoryHandle(handle);
-      set('workspaceDirectoryHandle', handle);
-      this.grantPermission();
-    }
-  }
-
-  retrieveDirectoryHandle() {
-    get('workspaceDirectoryHandle').then(
-      (handle: FileSystemDirectoryHandle) => {
-        if (handle) {
-          this.setDirectoryHandle(handle);
-        }
-      }
-    );
-  }
-
-  get verifiedDirectory() {
-    if (this.isPermissionVerified && this.directoryHandle !== null) {
-      return new FileSystemDirectory(this.directoryHandle);
-    }
-    return null;
+  get historyDirectoryList() {
+    return Array.from(this.historyDirectoryMap.entries());
   }
 }
 
-export const fileSystemStore = new FileSystemStore(globalApiClientStore);
+export const fileSystemStore = new FileSystemStore();
 const context = createContext(fileSystemStore);
 
 export function useFileSystemStore() {

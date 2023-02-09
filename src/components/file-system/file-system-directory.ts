@@ -4,8 +4,13 @@ import { FileSystemFile } from './file-system-file';
 import { FileSystemItem } from './file-system-item';
 
 export class FileSystemDirectory extends FileSystemItem {
-  constructor(private handle: FileSystemDirectoryHandle) {
+  constructor(handle: FileSystemDirectoryHandle) {
     super(handle);
+    console.log('FileSystemDirectory', handle.name);
+  }
+
+  get directoryHandle(): FileSystemDirectoryHandle {
+    return this.handle as FileSystemDirectoryHandle;
   }
 
   async getDirectory(
@@ -19,7 +24,7 @@ export class FileSystemDirectory extends FileSystemItem {
         async (currentHandle: Promise<FileSystemDirectoryHandle>, part) => {
           return (await currentHandle).getDirectoryHandle(part, { create });
         },
-        Promise.resolve(this.handle)
+        Promise.resolve(this.directoryHandle)
       );
       return new FileSystemDirectory(targetHandle);
     } catch (e) {
@@ -38,16 +43,19 @@ export class FileSystemDirectory extends FileSystemItem {
       return null;
     }
 
-    const directoryHandle = await this.getDirectory(parts.join('/'), create);
+    const directory = await this.getDirectory(parts.join('/'), create);
 
-    if (directoryHandle === null) {
+    if (directory === null) {
       return null;
     }
 
     try {
-      const fileHandle = await directoryHandle.handle.getFileHandle(fileName, {
-        create,
-      });
+      const fileHandle = await directory.directoryHandle.getFileHandle(
+        fileName,
+        {
+          create,
+        }
+      );
 
       return new FileSystemFile(fileHandle);
     } catch (e) {
@@ -60,7 +68,7 @@ export class FileSystemDirectory extends FileSystemItem {
   ): Promise<FileSystemItem[]> {
     const result: FileSystemItem[] = [];
     // eslint-disable-next-line no-restricted-syntax
-    for await (const [key, value] of this.handle.entries()) {
+    for await (const [key, value] of this.directoryHandle.entries()) {
       if (filter === undefined || filter({ name: key, type: value.kind })) {
         if (value.kind === 'directory') {
           result.push(new FileSystemDirectory(value));

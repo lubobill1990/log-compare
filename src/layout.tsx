@@ -115,6 +115,9 @@ export const SideBarTitle = observer(
     );
   }
 );
+export const SideBarBody = observer((props: { children?: React.ReactNode }) => {
+  return <div className={classes.sideBarBody}>{props.children}</div>;
+});
 
 export const MainView = observer(() => {
   const node = useLayoutStore().getSlot(SlotName.mainView);

@@ -3,16 +3,21 @@ import { Nullable } from '@/interfaces/common';
 import { FileSystemItem } from './file-system-item';
 
 export class FileSystemFile extends FileSystemItem {
-  constructor(private handle: FileSystemFileHandle) {
+  constructor(handle: FileSystemFileHandle) {
     super(handle);
+    console.log('FileSystemFile', handle);
+  }
+
+  get fileHandle(): FileSystemFileHandle {
+    return this.handle as FileSystemFileHandle;
   }
 
   async getFile(): Promise<File> {
-    return this.handle.getFile();
+    return this.fileHandle.getFile();
   }
 
   async createWritable(): Promise<FileSystemWritableFileStream> {
-    return this.handle.createWritable();
+    return this.fileHandle.createWritable();
   }
 
   async getText(): Promise<string> {
