@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+import { action, makeAutoObservable, runInAction } from 'mobx';
 import { createContext, useContext } from 'react';
 
 import { allWithKeys, del, set } from '@/components/kv-store/kvstore';
@@ -32,18 +32,37 @@ export class FileSystemStore {
     if (result) {
       runInAction(() => {
         this.workspaceDirectory = directory;
+      });
 
-        Array.from(this.historyDirectoryMap.entries())
-          .filter(([_key, value]) => {
-            return this.workspaceDirectory?.isSameItem(value);
-          })
-          .forEach(([key]) => {
+      (
+        await Promise.all(
+          Array.from(this.historyDirectoryMap.entries()).map(
+            async ([key, value]) => ({
+              key,
+              same: await this.workspaceDirectory?.isSameItem(value),
+            })
+          )
+        )
+      )
+        .filter(({ same }) => same)
+        .forEach(
+          action(({ key }) => {
+            console.log(key);
             this.deleteHistoryDirectory(key);
-          });
+          })
+        );
+
+      if (this.workspaceDirectory) {
         const newId = Date.now().toString();
         set(newId, this.workspaceDirectory?.directoryHandle);
-        this.historyDirectoryMap.set(newId, this.workspaceDirectory);
-      });
+        runInAction(() => {
+          if (this.workspaceDirectory) {
+            this.historyDirectoryMap.set(newId, this.workspaceDirectory);
+          } else {
+            this.historyDirectoryMap.delete(newId);
+          }
+        });
+      }
     }
   }
 
@@ -60,6 +79,7 @@ export class FileSystemStore {
   }
 
   deleteHistoryDirectory(key: string) {
+    console.log('deleteHistoryDirectory', key);
     this.historyDirectoryMap.delete(key);
     del(key);
   }
