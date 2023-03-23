@@ -2,10 +2,10 @@ import { faLocationPin } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { observer } from 'mobx-react-lite';
-import React, {
+import {
   MouseEvent,
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -68,10 +68,7 @@ const LogLineRenderer = observer((props: IRowProps) => {
         className="line-head"
         onClick={(e) => {
           e.stopPropagation();
-          file.expandedLineRanges.addRange(
-            line.lineNumber - 1,
-            line.lineNumber - 1
-          );
+          file.addExpandedLineRange(line.lineNumber - 1, line.lineNumber - 1);
         }}
         title={new Date(line.timestamp).toLocaleString()}
       >
@@ -116,7 +113,11 @@ const NoLogLineHint = observer((props: { file: LogFile }) => {
   return (
     <div className="no-log-hint">
       <div className="content">
-        <p>No line filtered. Please revisit the search patterns:</p>
+        {file.filtering ? (
+          <p>Filtering...</p>
+        ) : (
+          <p>No line filtered. Please revisit the search patterns:</p>
+        )}
         <ul>
           {file.searchKeywordsArray.map((keyword, i) => (
             <li key={i}>{keyword}</li>
@@ -170,7 +171,7 @@ const AutoSizedList = observer(
 
     const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
 
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (listRef.current) {
         listRef.current.scrollToItem(localTargetIndex, 'smart');
       }

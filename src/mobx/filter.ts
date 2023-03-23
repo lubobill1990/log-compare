@@ -2,7 +2,6 @@
 import { makeAutoObservable } from 'mobx';
 import { createContext, useContext } from 'react';
 
-import { LogLine } from '@/interface';
 import { StorageProvider } from '@/utils/storage-provider';
 
 export interface IFilter {
@@ -26,43 +25,6 @@ export class Filter implements IFilter {
 
   setHighlightText(highlightText: string) {
     this.highlightText = highlightText;
-  }
-
-  get keywordFilter() {
-    const search = this.searchKeywords.trim();
-    if (search.startsWith('reg::')) {
-      const searches = search
-        .slice(5)
-        .split('&&')
-        .map((s) => new RegExp(s));
-      if (searches.length === 0) {
-        return () => true;
-      }
-      return (line: LogLine) =>
-        searches.every((reg) => line.content.search(reg) > -1);
-    }
-
-    const orMatcheGroups = search
-      .toLowerCase()
-      .split(',')
-      .map((v) => v.trim())
-      .filter((v) => v)
-      .map((match) =>
-        match
-          .split('&&')
-          .map((v) => v.trim())
-          .filter((v) => v)
-      );
-
-    return (line: LogLine) => {
-      if (orMatcheGroups.length === 0) {
-        return true;
-      }
-      const lowerLine = line.content.toLowerCase();
-      return orMatcheGroups.some((andMatches) =>
-        andMatches.every((keyword) => lowerLine.indexOf(keyword) >= 0)
-      );
-    };
   }
 }
 

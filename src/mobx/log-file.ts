@@ -1,53 +1,15 @@
 /* eslint-disable max-classes-per-file */
-import { makeAutoObservable } from 'mobx';
+import { proxy } from 'comlink';
+import { autorun, makeAutoObservable, runInAction } from 'mobx';
 import { createContext, useContext } from 'react';
 import getSha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 
-import { LogLevel, LogLine } from '@/interface';
-import { binarySearchClosestLog } from '@/util';
+import { LogLine } from '@/interface';
 import { StorageProvider } from '@/utils/storage-provider';
 
 import { Filter } from './filter';
-
-class LineRange {
-  constructor(public start: number, public end: number) {
-    makeAutoObservable(this);
-  }
-
-  isInRange(lineNumber: number) {
-    return lineNumber >= this.start && lineNumber <= this.end;
-  }
-
-  equalsTo(other: LineRange) {
-    return this.start === other.start && this.end === other.end;
-  }
-}
-
-class LineRanges {
-  ranges: LineRange[] = [];
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  addRange(start: number, end: number) {
-    this.ranges.push(new LineRange(start, end));
-  }
-
-  removeRange(start: number, end: number) {
-    const range = new LineRange(start, end);
-    this.ranges = this.ranges.filter((r) => r.equalsTo(range) === false);
-  }
-
-  isInRange(lineNumber: number) {
-    return this.ranges.some((range) => range.isInRange(lineNumber));
-  }
-
-  get filter() {
-    return (line: LogLine) => this.isInRange(line.lineNumber);
-  }
-}
+import { getLinesFromContent } from './log-file-utils';
 
 class LogFileStorageProvider extends StorageProvider {
   loadPinedLines() {
@@ -62,38 +24,6 @@ class LogFileStorageProvider extends StorageProvider {
   savePinedLines(pinedLines: Map<number, boolean>) {
     this.save(Array.from(pinedLines.keys()), `pinLines`);
   }
-}
-
-function getDateFromLine(line: string) {
-  if (line.startsWith(' ')) {
-    return null;
-  }
-
-  if (line.search(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} \[/) === 0) {
-    const dateString = line.substring(0, 23);
-    return { dateString, date: new Date(`${dateString}+00:00`) };
-  }
-
-  if (line.search(/\d{4}-\d{2}-\d{2}-\d{2}:\d{2}:\d{2}.\d{3}/) === 0) {
-    const dateString = `${line.substring(0, 10)} ${line.substring(11, 23)}`;
-    return { dateString, date: new Date(`${dateString}`) };
-  }
-
-  for (let i = 57; i > 23; i -= 1) {
-    const dateString = line.substring(0, i);
-    const date = new Date(dateString);
-    if (date.toString() !== 'Invalid Date') {
-      return { dateString, date };
-    }
-  }
-  return null;
-}
-
-const minimumValidTimestamp = new Date('2020-01-01').getTime();
-const maximumValidTimestamp = new Date().getTime();
-
-function isValidTimestamp(timestamp: number) {
-  return timestamp > minimumValidTimestamp && timestamp < maximumValidTimestamp;
 }
 
 export class LogFileNameStore {
@@ -129,11 +59,17 @@ export class LogFile {
 
   selectedTimestamps = [0, 0, 0];
 
-  expandedLineRanges: LineRanges = new LineRanges();
-
   pinedLines = new Map<number, boolean>();
 
   private storageProvider: LogFileStorageProvider;
+
+  private filterWorker: any = null;
+
+  filteredLines = [] as LogLine[];
+
+  filtering = false;
+
+  filteredLineIndexOfSelectedTimestamp = 0;
 
   constructor(
     private logFileNameStore: LogFileNameStore,
@@ -145,117 +81,48 @@ export class LogFile {
     public customizedName = logFileNameStore.getFileName(sha1)
   ) {
     this.selectedTimestamps[0] = Date.now();
-    this.lines = this.getLinesFromContent(content);
+    this.lines = getLinesFromContent(content);
     this.storageProvider = new LogFileStorageProvider(`logFile-${this.sha1}`);
     this.pinedLines = this.storageProvider.loadPinedLines();
     makeAutoObservable(this, {
       lines: false,
     });
-  }
-
-  private formatTimestamp(timestamp: number) {
-    // parse to hour:minute:second.millisecond
-    const date = new Date(timestamp);
-    return `${date.getHours().toString().padStart(2, '0')}:${date
-      .getMinutes()
-      .toString()
-      .padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date
-      .getMilliseconds()
-      .toString()
-      .padStart(3, '0')}`;
-  }
-
-  private getLogLevel(line: string) {
-    const webLogIndex = line.search(/(?<=\d{3}Z )(Inf|War|Err) /);
-    if (webLogIndex >= 0) {
-      return {
-        Inf: LogLevel.INFO,
-        War: LogLevel.WARN,
-        Err: LogLevel.ERROR,
-      }[line.slice(webLogIndex, webLogIndex + 3)];
-    }
-
-    const desktopLogIndex = line.search(
-      /(?<=-- )(error|warning|event|info) --/
+    this.filterWorker = new ComlinkWorker<typeof import('./filter-worker')>(
+      new URL('./filter-worker', import.meta.url)
     );
 
-    if (desktopLogIndex >= 0) {
-      return {
-        erro: LogLevel.ERROR,
-        warn: LogLevel.WARN,
-        even: LogLevel.DEBUG,
-        info: LogLevel.INFO,
-      }[line.slice(desktopLogIndex, desktopLogIndex + 4)];
-    }
+    this.filterWorker.setupLogFileWorker(
+      content,
+      Array.from(this.pinedLines.keys()).map((lineNumber) => lineNumber),
+      proxy((filteredLines: any) => {
+        runInAction(() => {
+          this.filteredLines = filteredLines;
+          this.filtering = false;
+        });
+      }),
+      proxy((selectedLines: any, selectedTimestamps: any) => {
+        runInAction(() => {
+          this.selectedLines = selectedLines;
+          this.selectedTimestamps = selectedTimestamps;
+        });
+      }),
+      proxy((val: any) => {
+        runInAction(() => {
+          this.filteredLineIndexOfSelectedTimestamp = val;
+        });
+      })
+    );
 
-    return undefined;
-  }
-
-  private processLine(line: string, index: number) {
-    const res = getDateFromLine(line);
-    if (res === null) {
-      return new LogLine(0, line, index);
-    }
-    const { date, dateString } = res;
-    const timestamp = date.getTime();
-
-    const thisLine: string = `${this.formatTimestamp(timestamp)} - ${line.slice(
-      dateString.length
-    )}`;
-
-    return new LogLine(timestamp, thisLine, index, this.getLogLevel(line));
-  }
-
-  private getLinesFromContent(content: string) {
-    const rawLines = content.split('\n');
-    if (rawLines.length === 0) {
-      return [];
-    }
-    let previousTimestamp = 0;
-    const lineIndexesNeedReprocess: number[] = [];
-    const logLines = rawLines.map((line, index) => {
-      const logLine = this.processLine(line, index);
-      if (logLine.timestamp === 0) {
-        if (previousTimestamp !== 0) {
-          logLine.timestamp = previousTimestamp;
-          logLine.content = `${this.formatTimestamp(previousTimestamp)} - ${
-            logLine.content
-          }`;
-        } else {
-          lineIndexesNeedReprocess.push(index);
-        }
-      } else {
-        previousTimestamp = logLine.timestamp;
-      }
-      return logLine;
+    autorun(() => {
+      runInAction(() => {
+        this.filtering = true;
+      });
+      this.filterWorker.setFilterStrings(this.filterStrings);
     });
+  }
 
-    // iterate on the lines that need reprocess from the end to the beginning
-    for (let i = lineIndexesNeedReprocess.length - 1; i >= 0; i -= 1) {
-      const index = lineIndexesNeedReprocess[i];
-      const logLine = logLines[index];
-      const nextLine = logLines[index + 1];
-      if (nextLine?.timestamp > 0) {
-        logLine.timestamp = nextLine.timestamp;
-        logLine.content = `${this.formatTimestamp(nextLine.timestamp)} - ${
-          logLine.content
-        }`;
-      }
-    }
-
-    // compare the timestamp between the last and the first
-    // if the first is smaller than the last, reverse the lines
-    // if the first is bigger than the last, do nothing
-    // if the first is equal to the last, do nothing
-    const orderDiffSum =
-      logLines[0].timestamp - logLines[logLines.length - 1].timestamp;
-
-    return orderDiffSum < 0
-      ? logLines.reverse().map((logLine) => ({
-          ...logLine,
-          lineNumber: logLines.length - logLine.lineNumber - 1,
-        }))
-      : logLines;
+  addExpandedLineRange(start: number, end: number) {
+    this.filterWorker.addExpandedLineRange(start, end);
   }
 
   get highlightKeywords() {
@@ -289,38 +156,25 @@ export class LogFile {
   }
 
   selectLine(lineNumber: number) {
-    if (
-      lineNumber < this.lines.length &&
-      lineNumber >= 0 &&
-      this.selectedLines[0] !== lineNumber
-    ) {
-      this.selectedLines.unshift(lineNumber);
-      this.selectedLines.pop();
-      this.selectTimestamp(this.lines[lineNumber].timestamp);
-    }
+    this.filterWorker.selectLine(lineNumber);
   }
 
   selectTimestamp(timestamp: number) {
-    if (this.selectedTimestamps[0] !== timestamp) {
-      this.selectedTimestamps.unshift(timestamp);
-      this.selectedTimestamps.pop();
-    }
+    this.filterWorker.selectTimestamp(timestamp);
   }
 
   selectNearestTimestamp(targetTimestamp: number) {
-    const lineIndex = this.getClosestLineIndexFromTimestmap(targetTimestamp);
-    const nearestTimestamp = this.filteredLines[lineIndex]?.timestamp;
-    if (nearestTimestamp) {
-      this.selectTimestamp(nearestTimestamp);
-    }
+    this.filterWorker.selectNearestTimestamp(targetTimestamp);
   }
 
   pinLine(lineNumber: number) {
+    this.filterWorker.setPinedLine(lineNumber, true);
     this.pinedLines.set(lineNumber, true);
     this.storageProvider.savePinedLines(this.pinedLines);
   }
 
   unpinLine(lineNumber: number) {
+    this.filterWorker.setPinedLine(lineNumber, false);
     this.pinedLines.delete(lineNumber);
     this.storageProvider.savePinedLines(this.pinedLines);
   }
@@ -338,17 +192,11 @@ export class LogFile {
     this.logFileNameStore.setFileName(this.sha1, name);
   }
 
-  get filteredLines() {
-    const localKeywordFilter = this.filter.keywordFilter;
-    const globalKeywordFilter = this.globalFilter.keywordFilter;
-    const rangeFilter = this.expandedLineRanges.filter;
-    return this.lines.filter((line) => {
-      return (
-        (localKeywordFilter(line) && globalKeywordFilter(line)) ||
-        this.pinedLines.has(line.lineNumber) ||
-        rangeFilter(line)
-      );
-    });
+  get filterStrings() {
+    return [
+      ...this.filter.searchKeywords.split(','),
+      ...this.globalFilter.searchKeywords.split(','),
+    ];
   }
 
   get selectedLineNumber() {
@@ -359,24 +207,11 @@ export class LogFile {
     return this.selectedTimestamps[0];
   }
 
-  get filteredLineIndexOfSelectedTimestamp() {
-    return this.getClosestLineIndexFromTimestmap(this.selectedTimestamp);
-  }
-
   get searchKeywordsArray() {
     return [
       this.filter.searchKeywords,
       this.globalFilter.searchKeywords,
     ].filter((v) => v);
-  }
-
-  getClosestLineFromTimestamp(targetTimestamp: number) {
-    const index = this.getClosestLineIndexFromTimestmap(targetTimestamp);
-    return this.filteredLines[index];
-  }
-
-  getClosestLineIndexFromTimestmap(targetTimestamp: number) {
-    return binarySearchClosestLog(this.filteredLines, targetTimestamp, true);
   }
 }
 
