@@ -27,7 +27,6 @@
       "parserOptions": {
         "project": ["./tsconfig.json"]
       },
-      "ignorePatterns": ["vite.config.ts"],
       "rules": {
         "prettier/prettier": [
           "error",
