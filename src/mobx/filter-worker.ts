@@ -102,11 +102,12 @@ export function setupLogFileWorker(
     selectedLines: SelectedNumberArray,
     selectedTimestamps: SelectedNumberArray
   ) => void,
-  filteredLineIndexOfSelectedTimestampChanged: (val: number) => void
+  filteredLineIndexOfSelectedTimestampChanged: (val: number) => void,
+  filteredLineLengthChanged: (val: number) => void
 ) {
   worker = new LogFileWorker(contentFilter, content, pinedLines);
   autorun(() => {
-    linesFiltered(worker.filteredLines.map((line) => toJS(line)));
+    filteredLineLengthChanged(worker.filteredLines.length);
   });
   autorun(() => {
     selectedLineChanged(
@@ -148,3 +149,11 @@ export const selectTimestamp = throttle((lineNumber: number) => {
 export const selectNearestTimestamp = throttle((targetTimestamp: number) => {
   worker.selectNearestTimestamp(targetTimestamp);
 }, 50);
+
+export function fetchFilteredLine(indexArrayToFetch: number[]) {
+  return indexArrayToFetch.reduce((accu, i) => {
+    // eslint-disable-next-line no-param-reassign
+    accu[i] = toJS(worker.filteredLines[i]);
+    return accu;
+  }, {} as Record<number, LogLine>);
+}

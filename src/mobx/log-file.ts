@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import { proxy } from 'comlink';
-import { autorun, makeAutoObservable, runInAction } from 'mobx';
+import { throttle } from 'lodash';
+import { makeAutoObservable, runInAction, toJS } from 'mobx';
 import { createContext, useContext } from 'react';
 import getSha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,8 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { LogLine } from '@/interface';
 import { StorageProvider } from '@/utils/storage-provider';
 
+import { AutoRunManager } from './autorun-manager';
 import { Filter } from './filter';
-import { getLinesFromContent } from './log-file-utils';
 
 class LogFileStorageProvider extends StorageProvider {
   loadPinedLines() {
@@ -49,8 +50,6 @@ export class LogFileNameStore {
 }
 
 export class LogFile {
-  lines: LogLine[] = [];
-
   id = uuidv4();
 
   filter = new Filter();
@@ -65,11 +64,17 @@ export class LogFile {
 
   private filterWorker: any = null;
 
-  filteredLines = [] as LogLine[];
+  filteredLines = {} as { [key: string]: LogLine };
+
+  filteredLinesLength = 0;
 
   filtering = false;
 
   filteredLineIndexOfSelectedTimestamp = 0;
+
+  private pendingFilteredLinesIndexArray = [] as number[];
+
+  private autoRunManager = new AutoRunManager();
 
   constructor(
     private logFileNameStore: LogFileNameStore,
@@ -81,22 +86,29 @@ export class LogFile {
     public customizedName = logFileNameStore.getFileName(sha1)
   ) {
     this.selectedTimestamps[0] = Date.now();
-    this.lines = getLinesFromContent(content);
     this.storageProvider = new LogFileStorageProvider(`logFile-${this.sha1}`);
     this.pinedLines = this.storageProvider.loadPinedLines();
-    makeAutoObservable(this, {
-      lines: false,
+    makeAutoObservable(this, {});
+  }
+
+  init() {
+    this.autoRunManager.autorun(() => {
+      runInAction(() => {
+        this.filtering = true;
+      });
+      this.filterWorker.setFilterStrings(this.filterStrings);
     });
-    this.filterWorker = new ComlinkWorker<typeof import('./filter-worker')>(
+    this.filterWorker = new ComlinkWorker<any>(
       new URL('./filter-worker', import.meta.url)
     );
 
     this.filterWorker.setupLogFileWorker(
-      content,
+      this.content,
       Array.from(this.pinedLines.keys()).map((lineNumber) => lineNumber),
-      proxy((filteredLines: any) => {
+      proxy(() => {
         runInAction(() => {
-          this.filteredLines = filteredLines;
+          this.filteredLines = {};
+          this.pendingFilteredLinesIndexArray = [];
           this.filtering = false;
         });
       }),
@@ -110,15 +122,17 @@ export class LogFile {
         runInAction(() => {
           this.filteredLineIndexOfSelectedTimestamp = val;
         });
+      }),
+      proxy((val: any) => {
+        runInAction(() => {
+          this.filteredLinesLength = val;
+        });
       })
     );
+  }
 
-    autorun(() => {
-      runInAction(() => {
-        this.filtering = true;
-      });
-      this.filterWorker.setFilterStrings(this.filterStrings);
-    });
+  dispose() {
+    this.autoRunManager.dispose();
   }
 
   addExpandedLineRange(start: number, end: number) {
@@ -165,6 +179,40 @@ export class LogFile {
 
   selectNearestTimestamp(targetTimestamp: number) {
     this.filterWorker.selectNearestTimestamp(targetTimestamp);
+  }
+
+  private throttledFetchFilteredLine = throttle(async () => {
+    if (this.pendingFilteredLinesIndexArray.length === 0) {
+      return;
+    }
+    const indexArrayToFetch = toJS(this.pendingFilteredLinesIndexArray);
+    this.pendingFilteredLinesIndexArray = [];
+    const filteredLines = (await this.filterWorker.fetchFilteredLine(
+      indexArrayToFetch
+    )) as Record<string, LogLine>;
+    // for each record in filteredLines, add it to this.filteredLines
+    runInAction(() => {
+      this.appendFilteredLine(filteredLines);
+    });
+  }, 50);
+
+  appendFilteredLine(filteredLines: Record<number, LogLine>) {
+    Object.entries(filteredLines).forEach(([key, value]) => {
+      this.filteredLines[key] = value;
+    });
+  }
+
+  get fetchFilteredLine() {
+    const b =
+      this.filterStrings ||
+      this.pinedLines ||
+      this.appendFilteredLine ||
+      Date.now();
+    console.log(b);
+    return (index: number) => {
+      this.pendingFilteredLinesIndexArray.push(index);
+      this.throttledFetchFilteredLine();
+    };
   }
 
   pinLine(lineNumber: number) {
@@ -226,9 +274,11 @@ export class LogFiles {
 
   add(file: LogFile) {
     this.files.push(file);
+    file.init();
   }
 
   delete(file: LogFile) {
+    file.dispose();
     this.files = this.files.filter((f) => f !== file);
   }
 

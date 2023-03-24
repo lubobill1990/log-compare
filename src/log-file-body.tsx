@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import {
   MouseEvent,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -18,6 +19,7 @@ import {
 
 import { cx } from './components/common/cx';
 import { ContextMenuTrigger } from './components/widget/context-menu';
+import { LogLine } from './interface';
 import { LogFile } from './mobx/log-file';
 import { useSharedStateStore } from './mobx/shared-state';
 import { ContextMenuKey } from './mobx/ui-store';
@@ -31,7 +33,24 @@ interface IRowProps {
   };
 }
 
-const LogLineRenderer = observer((props: IRowProps) => {
+const LogLineGetter = observer(
+  (props: {
+    file: LogFile;
+    index: number;
+    children: (line: LogLine, isPinedLine: boolean) => React.ReactNode;
+  }) => {
+    const { index, file, children } = props;
+    const line = file.filteredLines[index];
+    const isPinedLine = line && file.pinedLines.has(line.lineNumber);
+    useEffect(() => {
+      file.fetchFilteredLine(index);
+    }, [index, file.fetchFilteredLine]);
+
+    return <>{line && children(line, isPinedLine)}</>;
+  }
+);
+
+const LogLineContainer = observer((props: IRowProps) => {
   const {
     index,
     style,
@@ -39,72 +58,78 @@ const LogLineRenderer = observer((props: IRowProps) => {
   } = props;
 
   const [hovered, setHovered] = useState(false);
-  const line = file.filteredLines[index];
-  const isPinedLine = file.pinedLines.has(line.lineNumber);
+
   const sharedStateStore = useSharedStateStore();
   return (
-    <div
-      className={[
-        'line',
-        index % 2 ? 'odd' : 'even',
-        file.pinedLines.has(line.lineNumber) ? 'pined' : '',
-        file.selectedTimestamps[2] === line.timestamp ? 'prev-2' : '',
-        file.selectedTimestamps[1] === line.timestamp ? 'prev-1' : '',
-        file.selectedTimestamps[0] === line.timestamp ? 'target' : '',
-        file.selectedLines[2] === line.lineNumber ? 'selected-2' : '',
-        file.selectedLines[1] === line.lineNumber ? 'selected-1' : '',
-        file.selectedLines[0] === line.lineNumber ? 'selected' : '',
-      ].join(' ')}
-      key={index}
-      style={style}
-      onClick={() => {
-        file.selectLine(line.lineNumber);
-        sharedStateStore.setFocusTimestamp(line.timestamp);
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div
-        className="line-head"
-        onClick={(e) => {
-          e.stopPropagation();
-          file.addExpandedLineRange(line.lineNumber - 1, line.lineNumber - 1);
-        }}
-        title={new Date(line.timestamp).toLocaleString()}
-      >
-        {line.lineNumber + 1}
-        <div className="line-mark">
-          {(isPinedLine || hovered) && (
-            <FontAwesomeIcon
-              icon={faLocationPin}
-              className={cx('pin', isPinedLine && 'pinned')}
-              onClick={(e: MouseEvent) => {
-                if (isPinedLine) {
-                  file.unpinLine(line.lineNumber);
-                } else {
-                  file.pinLine(line.lineNumber);
-                }
-                e.stopPropagation();
-              }}
-            ></FontAwesomeIcon>
-          )}
-        </div>
-      </div>
-      <ContextMenuTrigger
-        contextMenuKey={ContextMenuKey.LogLine}
-        data={{
-          file,
-          line,
-        }}
-      >
+    <LogLineGetter file={file} index={index}>
+      {(line: LogLine, isPinedLine: boolean) => (
         <div
-          className="content"
-          dangerouslySetInnerHTML={{
-            __html: file.highlightContent(line.content),
+          className={[
+            'line',
+            index % 2 ? 'odd' : 'even',
+            file.pinedLines.has(line.lineNumber) ? 'pined' : '',
+            file.selectedTimestamps[2] === line.timestamp ? 'prev-2' : '',
+            file.selectedTimestamps[1] === line.timestamp ? 'prev-1' : '',
+            file.selectedTimestamps[0] === line.timestamp ? 'target' : '',
+            file.selectedLines[2] === line.lineNumber ? 'selected-2' : '',
+            file.selectedLines[1] === line.lineNumber ? 'selected-1' : '',
+            file.selectedLines[0] === line.lineNumber ? 'selected' : '',
+          ].join(' ')}
+          key={index}
+          style={style}
+          onClick={() => {
+            file.selectLine(line.lineNumber);
+            sharedStateStore.setFocusTimestamp(line.timestamp);
           }}
-        ></div>
-      </ContextMenuTrigger>
-    </div>
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div
+            className="line-head"
+            onClick={(e) => {
+              e.stopPropagation();
+              file.addExpandedLineRange(
+                line.lineNumber - 1,
+                line.lineNumber - 1
+              );
+            }}
+            title={new Date(line.timestamp).toLocaleString()}
+          >
+            {line.lineNumber + 1}
+            <div className="line-mark">
+              {(isPinedLine || hovered) && (
+                <FontAwesomeIcon
+                  icon={faLocationPin}
+                  className={cx('pin', isPinedLine && 'pinned')}
+                  onClick={(e: MouseEvent) => {
+                    if (isPinedLine) {
+                      file.unpinLine(line.lineNumber);
+                    } else {
+                      file.pinLine(line.lineNumber);
+                    }
+                    e.stopPropagation();
+                  }}
+                ></FontAwesomeIcon>
+              )}
+            </div>
+          </div>
+          <ContextMenuTrigger
+            contextMenuKey={ContextMenuKey.LogLine}
+            data={{
+              file,
+              line,
+            }}
+          >
+            <div
+              className="content"
+              dangerouslySetInnerHTML={{
+                __html: file.highlightContent(line.content),
+              }}
+            ></div>
+          </ContextMenuTrigger>
+        </div>
+      )}
+    </LogLineGetter>
   );
 });
 
@@ -160,7 +185,9 @@ const AutoSizedList = observer(
         const { filteredLines } = file;
         const scrolledLine = filteredLines[scrollOffsetIndex];
         const selectedTimestampNotVisible =
+          filteredLines[visibleStartIndex] &&
           file.selectedTimestamp < filteredLines[visibleStartIndex].timestamp &&
+          filteredLines[visibleStopIndex] &&
           file.selectedTimestamp > filteredLines[visibleStopIndex].timestamp;
         if (scrolledLine && file.isFocused && !selectedTimestampNotVisible) {
           sharedStateStore.setFocusTimestamp(scrolledLine.timestamp);
@@ -180,7 +207,7 @@ const AutoSizedList = observer(
     const onScroll = useCallback((_props: ListOnScrollProps) => {}, []);
     return (
       <>
-        {file.filteredLines.length === 0 ? (
+        {file.filteredLinesLength === 0 ? (
           <NoLogLineHint file={file}></NoLogLineHint>
         ) : (
           <List
@@ -188,7 +215,7 @@ const AutoSizedList = observer(
             outerRef={listOuterRef}
             innerRef={listInnerRef}
             className="List"
-            itemCount={file.filteredLines.length}
+            itemCount={file.filteredLinesLength}
             itemSize={15}
             itemData={{
               file,
@@ -198,7 +225,7 @@ const AutoSizedList = observer(
             onItemsRendered={onItemsRendered}
             onScroll={onScroll}
           >
-            {LogLineRenderer}
+            {LogLineContainer}
           </List>
         )}
       </>
