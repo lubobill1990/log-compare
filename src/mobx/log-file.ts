@@ -10,7 +10,12 @@ import { LogLine } from '@/interface';
 import { StorageProvider } from '@/utils/storage-provider';
 
 import { AutoRunManager } from './autorun-manager';
+import { ContentHighlighter } from './content-highligher';
 import { Filter } from './filter';
+import {
+  SharedStateStore,
+  sharedStateStore as globalSharedStateStore,
+} from './shared-state';
 
 class LogFileStorageProvider extends StorageProvider {
   loadPinedLines() {
@@ -93,9 +98,6 @@ export class LogFile {
 
   init() {
     this.autoRunManager.autorun(() => {
-      runInAction(() => {
-        this.filtering = true;
-      });
       this.filterWorker.setFilterStrings(this.filterStrings);
     });
     this.filterWorker = new ComlinkWorker<any>(
@@ -107,7 +109,13 @@ export class LogFile {
       Array.from(this.pinedLines.keys()).map((lineNumber) => lineNumber),
       proxy(() => {
         runInAction(() => {
+          this.filtering = true;
+        });
+      }),
+      proxy((lineCount: number) => {
+        runInAction(() => {
           this.filtering = false;
+          this.filteredLinesLength = lineCount;
         });
       }),
       proxy((selectedLines: any, selectedTimestamps: any) => {
@@ -120,18 +128,15 @@ export class LogFile {
         runInAction(() => {
           this.filteredLineIndexOfSelectedTimestamp = val;
         });
-      }),
-      proxy((val: any) => {
-        runInAction(() => {
-          this.filteredLinesLength = val;
-          this.filteredLines = {};
-        });
       })
     );
+
+    this.content = '';
   }
 
   dispose() {
     this.autoRunManager.dispose();
+    this.filterWorker.terminate();
   }
 
   addExpandedLineRange(start: number, end: number) {
@@ -146,14 +151,15 @@ export class LogFile {
       .filter((v) => !!v);
   }
 
+  get highligher() {
+    return new ContentHighlighter([
+      ...this.filterStrings,
+      ...this.highlightKeywords,
+    ]).highlightContent;
+  }
+
   highlightContent(content: string) {
-    return this.highlightKeywords.reduce((acc, keyword, currentIndex) => {
-      const colorIndex = (currentIndex % 18) + 1;
-      return acc.replaceAll(
-        keyword,
-        `<b class="c${colorIndex}">${keyword}</b>`
-      );
-    }, content);
+    return this.highligher(content);
   }
 
   delete() {
@@ -202,12 +208,12 @@ export class LogFile {
   }
 
   get fetchFilteredLine() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const b =
       this.filterStrings ||
       this.pinedLines ||
       this.appendFilteredLine ||
       Date.now();
-    console.log(b);
     return (index: number) => {
       this.pendingFilteredLinesIndexArray.push(index);
       this.throttledFetchFilteredLine();
@@ -241,8 +247,8 @@ export class LogFile {
 
   get filterStrings() {
     return [
-      ...this.filter.searchKeywords.split(','),
-      ...this.globalFilter.searchKeywords.split(','),
+      ...this.filter.enabledSearchPatterns,
+      ...this.globalFilter.enabledSearchPatterns,
     ];
   }
 
@@ -253,13 +259,6 @@ export class LogFile {
   get selectedTimestamp() {
     return this.selectedTimestamps[0];
   }
-
-  get searchKeywordsArray() {
-    return [
-      this.filter.searchKeywords,
-      this.globalFilter.searchKeywords,
-    ].filter((v) => v);
-  }
 }
 
 export class LogFiles {
@@ -267,13 +266,29 @@ export class LogFiles {
 
   focusedFile: LogFile | null = null;
 
-  constructor() {
+  autoRunManager = new AutoRunManager();
+
+  constructor(private sharedStateStore: SharedStateStore) {
     makeAutoObservable(this);
+  }
+
+  init() {
+    this.autoRunManager.reaction(
+      () => this.sharedStateStore.focusTimestamp,
+      (focusTimestamp) => {
+        this.selectNearestTimestamp(focusTimestamp);
+      }
+    );
+  }
+
+  dispose() {
+    this.autoRunManager.dispose();
   }
 
   add(file: LogFile) {
     this.files.push(file);
     file.init();
+    this.selectNearestTimestamp(this.sharedStateStore.focusTimestamp);
   }
 
   delete(file: LogFile) {
@@ -300,10 +315,11 @@ export class LogFiles {
   }
 }
 
-export const logFileStore = new LogFiles();
-const context = createContext(logFileStore);
+export const logFilesStore = new LogFiles(globalSharedStateStore);
+logFilesStore.init();
+const context = createContext(logFilesStore);
 
-export function useLogFlieStore() {
+export function useLogFliesStore() {
   return useContext(context);
 }
 

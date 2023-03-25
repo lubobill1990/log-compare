@@ -13,7 +13,7 @@ import { AppLayout, LayoutSlot } from './layout';
 import { LogFileBody } from './log-file-body';
 import { LogFileHeader } from './log-file-header';
 import { SlotName } from './mobx/layout-store';
-import { LogFile, useLogFlieStore } from './mobx/log-file';
+import { LogFile, useLogFliesStore } from './mobx/log-file';
 import { SearchPanelRegister } from './search-panel';
 
 ReactModal.setAppElement('#root');
@@ -52,7 +52,7 @@ const DropzoneHint = observer(() => {
 });
 
 const LogPanel = observer(() => {
-  const logFileStore = useLogFlieStore();
+  const logFileStore = useLogFliesStore();
 
   return (
     <>

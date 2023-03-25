@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
 import { DebouncedInputField } from '@/components/common/form';
 import { useGlobalFilterStore } from '@/mobx/filter';
@@ -12,13 +12,23 @@ export const GlobalFilterRenderer = observer(() => {
   const globalFilter = useGlobalFilterStore();
   return (
     <div className="global-footer">
+      <input
+        type="checkbox"
+        checked={globalFilter.searchEnabled}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          globalFilter.setEnableSearch(e.target.checked);
+        }}
+        title="Enable global search"
+        className={'field-input'}
+      />
       <DebouncedInputField
         className="flex-1"
         inputClassName="flex-1"
         label="Global search"
         value={globalFilter.searchKeywords}
+        disabled={!globalFilter.searchEnabled}
         onChange={(e) => globalFilter.setSearchKeywords(e)}
-        placeholder="Keydword match: `keyword1&&keyword2,keyword3&&keyword4`, `,` means `or` and `&&` means `and`. RegExp match: `reg::regexp&&regexp2`."
+        placeholder="Pattern: `word1&&word2,/regex1&&regex2/`, `,` means `or` and `&&` means `and`, wrap regex between `//`."
       ></DebouncedInputField>
 
       <DebouncedInputField

@@ -41,9 +41,10 @@ export class ContentFilter {
         if (andMatches.length === 0) {
           return falseFunction;
         }
-        return (content: string, lowerCaseContent: string) => {
-          const lowerLine = content.toLowerCase();
-          return andMatches.every((keyword) => lowerLine.indexOf(keyword) >= 0);
+        return (_content: string, lowerCaseContent: string) => {
+          return andMatches.every(
+            (keyword) => lowerCaseContent.indexOf(keyword) >= 0
+          );
         };
       })
       .filter((v) => v !== falseFunction);

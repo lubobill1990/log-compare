@@ -14,7 +14,8 @@ export class Filter implements IFilter {
   constructor(
     public searchKeywords = '',
     public highlightText = '',
-    public name = ''
+    public name = '',
+    public searchEnabled = true
   ) {
     makeAutoObservable(this);
   }
@@ -25,6 +26,16 @@ export class Filter implements IFilter {
 
   setHighlightText(highlightText: string) {
     this.highlightText = highlightText;
+  }
+
+  setEnableSearch(val: boolean) {
+    this.searchEnabled = val;
+  }
+
+  get enabledSearchPatterns() {
+    return this.searchEnabled
+      ? this.searchKeywords.split(',').filter((v) => v)
+      : [];
   }
 }
 

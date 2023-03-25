@@ -3,10 +3,14 @@ import { DropTargetMonitor, useDrop } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 
 import { useGlobalFilterStore } from './mobx/filter';
-import { LogFile, useLogFileNameStore, useLogFlieStore } from './mobx/log-file';
+import {
+  LogFile,
+  useLogFileNameStore,
+  useLogFliesStore,
+} from './mobx/log-file';
 
 function useCreateLogFile() {
-  const logFileStore = useLogFlieStore();
+  const logFileStore = useLogFliesStore();
   const globalFilterStore = useGlobalFilterStore();
   const logFileNameStore = useLogFileNameStore();
   return useCallback(

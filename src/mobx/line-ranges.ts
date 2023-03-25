@@ -6,7 +6,7 @@ export class LineRanges {
   ranges: LineRange[] = [];
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {}, { autoBind: true });
   }
 
   addRange(start: number, end: number) {
@@ -18,11 +18,16 @@ export class LineRanges {
     this.ranges = this.ranges.filter((r) => r.equalsTo(range) === false);
   }
 
-  isInRange(lineNumber: number) {
-    return this.ranges.some((range) => range.isInRange(lineNumber));
+  get isInRange() {
+    const { ranges } = this;
+    return (lineNumber: number) => {
+      return ranges.some((range) => range.isInRange(lineNumber));
+    };
   }
 
   get filter() {
-    return (lineNumber: number) => this.isInRange(lineNumber);
+    const { isInRange } = this;
+    console.log('isInRange changed');
+    return (lineNumber: number) => isInRange(lineNumber);
   }
 }

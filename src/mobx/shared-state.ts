@@ -1,11 +1,11 @@
 /* eslint-disable max-classes-per-file */
-import { action, autorun, makeAutoObservable } from 'mobx';
+import { action, makeAutoObservable } from 'mobx';
 import { v4 as uuidv4 } from 'uuid';
 
 import { PostedData, SharedState } from '@/worker/shared-worker';
 
+import { AutoRunManager } from './autorun-manager';
 import { Filter, globalFilterStore } from './filter';
-import { LogFiles, logFileStore } from './log-file';
 
 const sharedWorker = new SharedWorker(
   new URL('../worker/shared-worker.ts', import.meta.url)
@@ -16,19 +16,22 @@ export class SharedStateStore implements SharedState {
 
   highlightText: string = '';
 
-  focusTimestamp: number = 0;
+  focusTimestamp: number = Number.MAX_SAFE_INTEGER;
 
   id = uuidv4();
 
   updatedBy?: string = undefined;
 
-  constructor(private logFiles: LogFiles, private globalFilter: Filter) {
+  private autoRunManager = new AutoRunManager();
+
+  constructor(private globalFilter: Filter) {
     makeAutoObservable(this, {
       searchKeywords: false,
       highlightText: false,
-      focusTimestamp: false,
     });
+  }
 
+  init() {
     sharedWorker.port.addEventListener(
       'message',
       action((event: any) => {
@@ -50,7 +53,7 @@ export class SharedStateStore implements SharedState {
     sharedWorker.port.postMessage({
       type: 'fetch',
     });
-    autorun(() => {
+    this.autoRunManager.autorun(() => {
       let needBroadcast = false;
       if (this.highlightText !== this.globalFilter.highlightText) {
         this.highlightText = this.globalFilter.highlightText;
@@ -64,6 +67,11 @@ export class SharedStateStore implements SharedState {
         this.broadcast();
       }
     });
+  }
+
+  dispose() {
+    sharedWorker.port.close();
+    this.autoRunManager.dispose();
   }
 
   broadcast() {
@@ -82,7 +90,6 @@ export class SharedStateStore implements SharedState {
       return;
     }
     this.focusTimestamp = timestamp;
-    this.logFiles.selectNearestTimestamp(timestamp);
     if (broadcast) {
       this.broadcast();
     }
@@ -107,11 +114,8 @@ export class SharedStateStore implements SharedState {
   }
 }
 
-export const sharedStateStore = new SharedStateStore(
-  logFileStore,
-  globalFilterStore
-);
-
+export const sharedStateStore = new SharedStateStore(globalFilterStore);
+sharedStateStore.init();
 export function useSharedStateStore() {
   return sharedStateStore;
 }

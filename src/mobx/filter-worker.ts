@@ -1,9 +1,10 @@
 import { throttle } from 'lodash';
-import { autorun, makeAutoObservable, toJS } from 'mobx';
+import { makeAutoObservable, toJS } from 'mobx';
 
 import { LogLine } from '@/interface';
 import { binarySearchClosestLog } from '@/util';
 
+import { AutoRunManager } from './autorun-manager';
 import { ContentFilter } from './content-filter';
 import { LineRanges } from './line-ranges';
 import { getLinesFromContent } from './log-file-utils';
@@ -11,6 +12,16 @@ import { getLinesFromContent } from './log-file-utils';
 /// <reference lib="webworker" />
 
 type SelectedNumberArray = [number, number, number];
+
+type SyncOutCallbacks = {
+  filterStart: () => void;
+  filterEnd: (lineCount: number) => void;
+  selectedLineChanged: (
+    selectedLines: SelectedNumberArray,
+    selectedTimestamps: SelectedNumberArray
+  ) => void;
+  filteredLineIndexOfSelectedTimestampChanged: (val: number) => void;
+};
 
 class LogFileWorker {
   lines: LogLine[] = [];
@@ -27,29 +38,58 @@ class LogFileWorker {
     Number.MAX_SAFE_INTEGER,
   ];
 
+  private autoRunManager = new AutoRunManager();
+
   constructor(
     private contentFilter: ContentFilter,
     public content: string,
+    private syncOutCallbacks: SyncOutCallbacks,
     pinedLinesArray: number[] = []
   ) {
     this.pinedLines = new Map(
       pinedLinesArray.map((lineNumber) => [lineNumber, true])
     );
     this.lines = getLinesFromContent(content);
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      pinedLines: false,
+    });
+  }
+
+  init() {
+    this.autoRunManager.autorun(() => {
+      this.syncOutCallbacks.selectedLineChanged(
+        toJS(this.selectedLines),
+        toJS(this.selectedTimestamps)
+      );
+    });
+    this.autoRunManager.autorun(() => {
+      this.syncOutCallbacks.filteredLineIndexOfSelectedTimestampChanged(
+        toJS(this.filteredLineIndexOfSelectedTimestamp)
+      );
+    });
+    this.autoRunManager.autorun(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { filteredLines } = this;
+    });
+  }
+
+  dispose() {
+    this.autoRunManager.dispose();
   }
 
   get filteredLines() {
     const { lineFilter } = this.contentFilter;
     const rangeFilter = this.expandedLineRanges.filter;
-
-    return this.lines.filter((line) => {
+    this.syncOutCallbacks.filterStart();
+    const res = this.lines.filter((line) => {
       return (
         rangeFilter(line.lineNumber) ||
         this.pinedLines.has(line.lineNumber) ||
         lineFilter(line.content)
       );
     });
+    this.syncOutCallbacks.filterEnd(this.lines.length);
+    return res;
   }
 
   selectLine(lineNumber: number) {
@@ -97,38 +137,35 @@ class LogFileWorker {
 }
 
 const contentFilter = new ContentFilter();
-let worker = new LogFileWorker(contentFilter, '');
+let worker = new LogFileWorker(contentFilter, '', {
+  filterStart: () => {},
+  filterEnd: () => {},
+  selectedLineChanged: () => {},
+  filteredLineIndexOfSelectedTimestampChanged: () => {},
+});
 export function setupLogFileWorker(
   content: string,
   pinedLines: number[],
-  linesFiltered: () => void,
+  filterStart: () => void,
+  filterEnd: (lineCount: number) => void,
   selectedLineChanged: (
     selectedLines: SelectedNumberArray,
     selectedTimestamps: SelectedNumberArray
   ) => void,
-  filteredLineIndexOfSelectedTimestampChanged: (val: number) => void,
-  filteredLineLengthChanged: (val: number) => void
+  filteredLineIndexOfSelectedTimestampChanged: (val: number) => void
 ) {
-  worker = new LogFileWorker(contentFilter, content, pinedLines);
-  autorun(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const lines = worker.filteredLines;
-    linesFiltered();
-  });
-  autorun(() => {
-    filteredLineLengthChanged(worker.filteredLines.length);
-  });
-  autorun(() => {
-    selectedLineChanged(
-      toJS(worker.selectedLines),
-      toJS(worker.selectedTimestamps)
-    );
-  });
-  autorun(() => {
-    filteredLineIndexOfSelectedTimestampChanged(
-      toJS(worker.filteredLineIndexOfSelectedTimestamp)
-    );
-  });
+  worker = new LogFileWorker(
+    contentFilter,
+    content,
+    {
+      filterStart,
+      filterEnd,
+      selectedLineChanged,
+      filteredLineIndexOfSelectedTimestampChanged,
+    },
+    pinedLines
+  );
+  worker.init();
 }
 
 export function setFilterStrings(filterStrings: string[]) {
@@ -165,4 +202,9 @@ export function fetchFilteredLine(indexArrayToFetch: number[]) {
     accu[i] = toJS(worker.filteredLines[i]);
     return accu;
   }, {} as Record<number, LogLine>);
+}
+
+export function terminate() {
+  // eslint-disable-next-line no-restricted-globals
+  self.close();
 }

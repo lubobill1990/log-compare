@@ -13,7 +13,6 @@ import {
 import {
   FixedSizeList,
   FixedSizeList as List,
-  ListOnItemsRenderedProps,
   ListOnScrollProps,
 } from 'react-window';
 
@@ -144,7 +143,7 @@ const NoLogLineHint = observer((props: { file: LogFile }) => {
           <p>No line filtered. Please revisit the search patterns:</p>
         )}
         <ul>
-          {file.searchKeywordsArray.map((keyword, i) => (
+          {file.filterStrings.map((keyword, i) => (
             <li key={i}>{keyword}</li>
           ))}
         </ul>
@@ -157,44 +156,9 @@ const AutoSizedList = observer(
   (props: { file: LogFile; height: number; width: number }) => {
     const { file, height, width } = props;
 
-    const sharedStateStore = useSharedStateStore();
-
     const listRef = useRef<FixedSizeList>(null);
     const listInnerRef = useRef<HTMLDivElement>(null);
     const listOuterRef = useRef<HTMLDivElement>(null);
-
-    const scrollerWidth = 16;
-    const onItemsRendered = useCallback(
-      (e: ListOnItemsRenderedProps) => {
-        if (listOuterRef.current && listInnerRef.current) {
-          if (
-            listOuterRef.current.scrollWidth -
-              listInnerRef.current.clientWidth >
-            scrollerWidth + 4
-          ) {
-            listInnerRef.current.style.width = `${
-              listOuterRef.current.scrollWidth - scrollerWidth
-            }px`;
-          }
-        }
-
-        const { visibleStartIndex, visibleStopIndex } = e;
-        const scrollOffsetIndex = Math.floor(
-          (visibleStartIndex + visibleStopIndex) / 2
-        );
-        const { filteredLines } = file;
-        const scrolledLine = filteredLines[scrollOffsetIndex];
-        const selectedTimestampNotVisible =
-          filteredLines[visibleStartIndex] &&
-          file.selectedTimestamp < filteredLines[visibleStartIndex].timestamp &&
-          filteredLines[visibleStopIndex] &&
-          file.selectedTimestamp > filteredLines[visibleStopIndex].timestamp;
-        if (scrolledLine && file.isFocused && !selectedTimestampNotVisible) {
-          sharedStateStore.setFocusTimestamp(scrolledLine.timestamp);
-        }
-      },
-      [listOuterRef, scrollerWidth, listInnerRef, file, sharedStateStore]
-    );
 
     const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
 
@@ -222,7 +186,6 @@ const AutoSizedList = observer(
             }}
             height={height}
             width={width}
-            onItemsRendered={onItemsRendered}
             onScroll={onScroll}
           >
             {LogLineContainer}
