@@ -88,7 +88,7 @@ class LogFileWorker {
         lineFilter(line.content)
       );
     });
-    this.syncOutCallbacks.filterEnd(this.lines.length);
+    this.syncOutCallbacks.filterEnd(res.length);
     return res;
   }
 

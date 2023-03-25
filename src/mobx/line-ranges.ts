@@ -27,7 +27,6 @@ export class LineRanges {
 
   get filter() {
     const { isInRange } = this;
-    console.log('isInRange changed');
     return (lineNumber: number) => isInRange(lineNumber);
   }
 }

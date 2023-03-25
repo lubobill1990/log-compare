@@ -59,6 +59,8 @@ const LogLineContainer = observer((props: IRowProps) => {
   const [hovered, setHovered] = useState(false);
 
   const sharedStateStore = useSharedStateStore();
+  const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
+
   return (
     <LogLineGetter file={file} index={index}>
       {(line: LogLine, isPinedLine: boolean) => (
@@ -66,6 +68,7 @@ const LogLineContainer = observer((props: IRowProps) => {
           className={[
             'line',
             index % 2 ? 'odd' : 'even',
+            localTargetIndex === index ? 'target' : '',
             file.pinedLines.has(line.lineNumber) ? 'pined' : '',
             file.selectedTimestamps[2] === line.timestamp ? 'prev-2' : '',
             file.selectedTimestamps[1] === line.timestamp ? 'prev-1' : '',
