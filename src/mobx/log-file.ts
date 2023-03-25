@@ -107,8 +107,6 @@ export class LogFile {
       Array.from(this.pinedLines.keys()).map((lineNumber) => lineNumber),
       proxy(() => {
         runInAction(() => {
-          this.filteredLines = {};
-          this.pendingFilteredLinesIndexArray = [];
           this.filtering = false;
         });
       }),
@@ -126,6 +124,7 @@ export class LogFile {
       proxy((val: any) => {
         runInAction(() => {
           this.filteredLinesLength = val;
+          this.filteredLines = {};
         });
       })
     );

@@ -21,7 +21,11 @@ class LogFileWorker {
 
   selectedLines: SelectedNumberArray = [0, 0, 0];
 
-  selectedTimestamps: SelectedNumberArray = [0, 0, 0];
+  selectedTimestamps: SelectedNumberArray = [
+    Number.MAX_SAFE_INTEGER,
+    Number.MAX_SAFE_INTEGER,
+    Number.MAX_SAFE_INTEGER,
+  ];
 
   constructor(
     private contentFilter: ContentFilter,
@@ -97,7 +101,7 @@ let worker = new LogFileWorker(contentFilter, '');
 export function setupLogFileWorker(
   content: string,
   pinedLines: number[],
-  linesFiltered: (logLines: LogLine[]) => void,
+  linesFiltered: () => void,
   selectedLineChanged: (
     selectedLines: SelectedNumberArray,
     selectedTimestamps: SelectedNumberArray
@@ -106,6 +110,11 @@ export function setupLogFileWorker(
   filteredLineLengthChanged: (val: number) => void
 ) {
   worker = new LogFileWorker(contentFilter, content, pinedLines);
+  autorun(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const lines = worker.filteredLines;
+    linesFiltered();
+  });
   autorun(() => {
     filteredLineLengthChanged(worker.filteredLines.length);
   });
