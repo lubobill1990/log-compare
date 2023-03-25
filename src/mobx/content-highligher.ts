@@ -63,14 +63,18 @@ export class ContentHighlighter {
       if (patterns.length > 0) {
         patterns.forEach((pattern, keywordIndex) => {
           if (pattern.isRegex) {
-            const regex = new RegExp(pattern.pattern, 'gd');
-            [...content.matchAll(regex)].forEach((match) => {
-              matches.push([
-                (match as any).indices[0][0],
-                (match as any).indices[0][1],
-                keywordIndex,
-              ]);
-            });
+            try {
+              const regex = new RegExp(pattern.pattern, 'gd');
+              [...content.matchAll(regex)].forEach((match) => {
+                matches.push([
+                  (match as any).indices[0][0],
+                  (match as any).indices[0][1],
+                  keywordIndex,
+                ]);
+              });
+            } catch (_e) {
+              // ignore
+            }
           } else {
             const keyword = pattern.pattern;
             let index = lowerCaseContent.indexOf(keyword);
