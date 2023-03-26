@@ -24,8 +24,12 @@ export class ContentFilter {
           .filter((v) => v)
           .map((s) => {
             if (s.startsWith('/') && s.endsWith('/')) {
+              const pattern = s.slice(1, -1);
+              if (pattern === '') {
+                return '';
+              }
               try {
-                return new RegExp(s.slice(1, -1));
+                return new RegExp(pattern);
               } catch (e) {
                 return '';
               }

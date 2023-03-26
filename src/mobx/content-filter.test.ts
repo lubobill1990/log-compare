@@ -15,7 +15,7 @@ describe('Test LogFilter', () => {
   });
 
   it('if one filter string is not empty, then return true when filter matches', () => {
-    logFilter.setFilterStrings(['', '//', '&&', '&&&&', '/&&&&/', '123']);
+    logFilter.setFilterStrings(['', '//', '&&', '&&&&', '//&&&&//', '123']);
     expect(logFilter.lineFilter('12')).toEqual(false);
     expect(logFilter.lineFilter('1234')).toEqual(true);
   });
@@ -32,7 +32,7 @@ describe('Test LogFilter', () => {
     expect(logFilter.lineFilter('678')).toEqual(false);
   });
   it('test complex regex filter with and condition', () => {
-    logFilter.setFilterStrings(['/123|567&&abc/']);
+    logFilter.setFilterStrings(['/123|567/&&abc']);
     expect(logFilter.lineFilter('1234abc')).toEqual(true);
     expect(logFilter.lineFilter('5678abc')).toEqual(true);
     expect(logFilter.lineFilter('5678bcd')).toEqual(false);
