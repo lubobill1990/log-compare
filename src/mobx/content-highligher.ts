@@ -27,61 +27,48 @@ export class ContentHighlighter {
   }
 
   get highlightMarker() {
-    const patterns: { isRegex: boolean; pattern: string }[] = [];
-    this.filterStringArray.forEach((search) => {
-      if (search.startsWith('/') && search.endsWith('/')) {
-        const searches = search
-          .slice(1, -1)
+    const patterns = this.filterStringArray
+      .map((search) =>
+        search
           .split('&&')
           .map((v) => v.trim())
-          .filter((v) => v);
-
-        if (searches.length === 0) {
-          return;
-        }
-
-        patterns.push(...searches.map((v) => ({ isRegex: true, pattern: v })));
-      } else {
-        const andMatches = search
-          .toLowerCase()
-          .split('&&')
-          .map((v) => v.trim())
-          .filter((v) => v);
-
-        if (andMatches.length === 0) {
-          return;
-        }
-
-        patterns.push(
-          ...andMatches.map((v) => ({ isRegex: false, pattern: v }))
-        );
-      }
-    }, [] as ((content: string, _lowerCaseContent: string) => MatchIndices[])[]);
-
+          .filter((v) => v)
+          .map((s) => {
+            if (s.startsWith('/') && s.endsWith('/')) {
+              const regexPattern = s.slice(1, -1);
+              if (regexPattern === '') {
+                return '';
+              }
+              try {
+                return new RegExp(regexPattern, 'gd');
+              } catch (e) {
+                return '';
+              }
+            } else {
+              return s;
+            }
+          })
+          .filter((v) => v)
+      )
+      .flat();
     return (content: string, lowerCaseContent: string) => {
       const matches: MatchIndices[] = [];
       if (patterns.length > 0) {
-        patterns.forEach((pattern, keywordIndex) => {
-          if (pattern.isRegex) {
-            try {
-              const regex = new RegExp(pattern.pattern, 'gd');
-              [...content.matchAll(regex)].forEach((match) => {
-                matches.push([
-                  (match as any).indices[0][0],
-                  (match as any).indices[0][1],
-                  keywordIndex,
-                ]);
-              });
-            } catch (_e) {
-              // ignore
+        patterns.forEach((pattern, patternIndex) => {
+          if (typeof pattern === 'string') {
+            let index = lowerCaseContent.indexOf(pattern);
+            while (index >= 0) {
+              matches.push([index, index + pattern.length, patternIndex]);
+              index = lowerCaseContent.indexOf(pattern, index + 1);
             }
           } else {
-            const keyword = pattern.pattern;
-            let index = lowerCaseContent.indexOf(keyword);
-            while (index >= 0) {
-              matches.push([index, index + keyword.length, keywordIndex]);
-              index = lowerCaseContent.indexOf(keyword, index + 1);
-            }
+            [...content.matchAll(pattern)].forEach((match) => {
+              matches.push([
+                (match as any).indices[0][0],
+                (match as any).indices[0][1],
+                patternIndex,
+              ]);
+            });
           }
         });
       }

@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
 import { DebouncedInputField } from './components/common/form';
 import { ContextMenuTrigger } from './components/widget/context-menu';
@@ -35,21 +35,53 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
         </div>
       </ContextMenuTrigger>
 
-      <div className="log-filters">
-        <DebouncedInputField
-          className="log-filter"
-          label="Search"
-          value={file.filter.searchKeywords}
-          onChange={(value: string) => file.filter.setSearchKeywords(value)}
-          placeholder="Input search pattern"
-        ></DebouncedInputField>
-        <DebouncedInputField
-          className="log-filter"
-          label="Highlights"
-          value={file.filter.highlightText}
-          onChange={(value) => file.filter.setHighlightText(value)}
-          placeholder="Separate with `,`"
-        ></DebouncedInputField>
+      <div className="log-control">
+        <div className="control" title="Sync time between logs">
+          <label htmlFor={`${file.id}-sync`}>Sync time</label>
+          <input
+            id={`${file.id}-sync`}
+            type="checkbox"
+            checked={file.enableSyncTime}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              file.setEnableSyncTime(e.target.checked);
+            }}
+          />
+        </div>
+        <div className="control">
+          <label htmlFor={`${file.id}-search`}>Search</label>
+          <input
+            id={`${file.id}-search`}
+            type="checkbox"
+            checked={file.filter.searchEnabled}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              file.filter.setEnableSearch(e.target.checked);
+            }}
+            title="Enable global search"
+            className="check"
+          />
+          {file.filter.searchEnabled && (
+            <div className="position-wrap">
+              <div className="log-filters">
+                <DebouncedInputField
+                  className="log-filter"
+                  label="Search"
+                  value={file.filter.searchKeywords}
+                  onChange={(value: string) =>
+                    file.filter.setSearchKeywords(value)
+                  }
+                  placeholder="Input search pattern"
+                ></DebouncedInputField>
+                <DebouncedInputField
+                  className="log-filter"
+                  label="Highlights"
+                  value={file.filter.highlightText}
+                  onChange={(value) => file.filter.setHighlightText(value)}
+                  placeholder="Separate with `,`"
+                ></DebouncedInputField>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

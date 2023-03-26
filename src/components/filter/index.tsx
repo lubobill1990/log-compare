@@ -28,7 +28,7 @@ export const GlobalFilterRenderer = observer(() => {
         value={globalFilter.searchKeywords}
         disabled={!globalFilter.searchEnabled}
         onChange={(e) => globalFilter.setSearchKeywords(e)}
-        placeholder="Pattern: `word1&&word2,/regex1&&regex2/`, `,` means `or` and `&&` means `and`, wrap regex between `//`."
+        placeholder="Format: `pattern1&&pattern2,pattern3`. `pattern1` can be `keyword` or `/regex/`."
       ></DebouncedInputField>
 
       <DebouncedInputField

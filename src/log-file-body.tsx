@@ -81,7 +81,9 @@ const LogLineContainer = observer((props: IRowProps) => {
           style={style}
           onClick={() => {
             file.selectLine(line.lineNumber);
-            sharedStateStore.setFocusTimestamp(line.timestamp);
+            if (file.enableSyncTime) {
+              sharedStateStore.setFocusTimestamp(line.timestamp);
+            }
           }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}

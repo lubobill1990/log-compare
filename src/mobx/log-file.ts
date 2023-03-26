@@ -57,11 +57,15 @@ export class LogFileNameStore {
 export class LogFile {
   id = uuidv4();
 
-  filter = new Filter();
+  filter = new Filter('', '', '', false);
+
+  enableSyncTime = true;
 
   selectedLines = [0, 0, 0];
 
   selectedTimestamps = [0, 0, 0];
+
+  nearestTimestamp = Number.MAX_SAFE_INTEGER;
 
   pinedLines = new Map<number, boolean>();
 
@@ -183,7 +187,10 @@ export class LogFile {
   }
 
   selectNearestTimestamp(targetTimestamp: number) {
-    this.filterWorker.selectNearestTimestamp(targetTimestamp);
+    this.nearestTimestamp = targetTimestamp;
+    if (this.enableSyncTime) {
+      this.filterWorker.selectNearestTimestamp(targetTimestamp);
+    }
   }
 
   private throttledFetchFilteredLine = throttle(async () => {
@@ -230,6 +237,13 @@ export class LogFile {
     this.filterWorker.setPinedLine(lineNumber, false);
     this.pinedLines.delete(lineNumber);
     this.storageProvider.savePinedLines(this.pinedLines);
+  }
+
+  setEnableSyncTime(enable: boolean) {
+    this.enableSyncTime = enable;
+    if (enable) {
+      this.filterWorker.selectNearestTimestamp(this.nearestTimestamp);
+    }
   }
 
   get isFocused() {

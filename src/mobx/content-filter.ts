@@ -18,34 +18,32 @@ export class ContentFilter {
   get lineFilter() {
     const orMatchers = this.filterStringArray
       .map((search) => {
-        if (search.startsWith('/') && search.endsWith('/')) {
-          const searches = search
-            .slice(1, -1)
-            .split('&&')
-            .map((v) => v.trim())
-            .filter((v) => v)
-            .map((s) => new RegExp(s));
-          if (searches.length === 0) {
-            return falseFunction;
-          }
-          return (content: string) =>
-            searches.every((reg) => content.search(reg) > -1);
-        }
-
-        const andMatches = search
-          .toLowerCase()
+        const searches = search
           .split('&&')
           .map((v) => v.trim())
+          .filter((v) => v)
+          .map((s) => {
+            if (s.startsWith('/') && s.endsWith('/')) {
+              try {
+                return new RegExp(s.slice(1, -1));
+              } catch (e) {
+                return '';
+              }
+            } else {
+              return s;
+            }
+          })
           .filter((v) => v);
-
-        if (andMatches.length === 0) {
+        if (searches.length === 0) {
           return falseFunction;
         }
-        return (_content: string, lowerCaseContent: string) => {
-          return andMatches.every(
-            (keyword) => lowerCaseContent.indexOf(keyword) >= 0
-          );
-        };
+        return (content: string, lowerCaseContent: string) =>
+          searches.every((keyword) => {
+            if (typeof keyword === 'string') {
+              return lowerCaseContent.indexOf(keyword) >= 0;
+            }
+            return content.search(keyword) > -1;
+          });
       })
       .filter((v) => v !== falseFunction);
 
