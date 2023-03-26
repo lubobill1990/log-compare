@@ -1,35 +1,26 @@
-import { faShare, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faShareFromSquare,
+  faTrashCan,
+  faWandMagicSparkles,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-import { cx } from '@/components/common/cx';
-import { Modal, ModalActions } from '@/components/widget/modal';
-import {
-  IFilter,
-  useGlobalFilterStore,
-  useStoredFiltersStore,
-} from '@/mobx/filter';
-import { useUIStore } from '@/mobx/ui-store';
+import { ShareLinkModal } from '@/components/filter/share-link-modal';
+import { SideBarSection } from '@/components/side-bar/section';
+import { useGlobalFilterStore, useStoredFiltersStore } from '@/mobx/filter';
 
-import './filter.scss';
-import { ShareLinkModal } from './share-link-modal';
+import './saved-filters.scss';
 
-export const AllFiltersModal = observer(() => {
-  const uiStore = useUIStore();
-
+export const SavedFilterList = observer(() => {
   const storedFilters = useStoredFiltersStore();
-  const globalFilter = useGlobalFilterStore();
-  const [pickedFilter, setPickedFilter] = useState<IFilter | null>(null);
   const [filterShareLink, setFilterShareLink] = useState<string>('');
+  const globalFilter = useGlobalFilterStore();
 
   return (
-    <Modal
-      title="All filters"
-      isOpen={uiStore.isLoadFilterModalVisible}
-      onClose={uiStore.toggleLoadFilterModal}
-    >
+    <SideBarSection id="saved-filters" title="Saved filters">
       <ShareLinkModal
         filterShareLink={filterShareLink}
         setFilterShareLink={setFilterShareLink}
@@ -39,14 +30,7 @@ export const AllFiltersModal = observer(() => {
         <>
           <div className="stored-filters">
             {storedFilters.storedFilters.map((filter, index) => (
-              <div
-                className={cx(
-                  'stored-filter',
-                  pickedFilter?.name === filter.name && 'picked'
-                )}
-                key={index}
-                onClick={() => setPickedFilter(filter)}
-              >
+              <div className="stored-filter" key={index}>
                 <label>{filter.name}</label>
                 {filter.searchKeywords && (
                   <p>{`Search: ${filter.searchKeywords}`}</p>
@@ -57,11 +41,18 @@ export const AllFiltersModal = observer(() => {
                 <div className="actions">
                   <FontAwesomeIcon
                     onClick={() => {
+                      globalFilter.setSearchKeywords(filter.searchKeywords);
+                      globalFilter.setHighlightText(filter.highlightText);
+                    }}
+                    icon={faWandMagicSparkles}
+                  ></FontAwesomeIcon>
+                  <FontAwesomeIcon
+                    onClick={() => {
                       const url = new URL(window.location.href);
                       url.searchParams.set('filter', JSON.stringify(filter));
                       setFilterShareLink(url.toString());
                     }}
-                    icon={faShare}
+                    icon={faShareFromSquare}
                   ></FontAwesomeIcon>
                   <FontAwesomeIcon
                     className="delete"
@@ -69,27 +60,14 @@ export const AllFiltersModal = observer(() => {
                       window.confirm('Confirm delete?') &&
                       storedFilters.deleteFilter(filter.name)
                     }
-                    icon={faTrash}
+                    icon={faTrashCan}
                   ></FontAwesomeIcon>
                 </div>
               </div>
             ))}
           </div>
-          <ModalActions>
-            <button
-              onClick={() => {
-                if (pickedFilter) {
-                  globalFilter.setSearchKeywords(pickedFilter.searchKeywords);
-                  globalFilter.setHighlightText(pickedFilter.highlightText);
-                  uiStore.toggleLoadFilterModal();
-                }
-              }}
-            >
-              Load filter
-            </button>
-          </ModalActions>
         </>
       )}
-    </Modal>
+    </SideBarSection>
   );
 });

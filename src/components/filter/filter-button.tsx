@@ -1,17 +1,24 @@
 import { observer } from 'mobx-react-lite';
 
 import { useGlobalFilterStore } from '@/mobx/filter';
+import { useLayoutStore } from '@/mobx/layout-store';
 import { useUIStore } from '@/mobx/ui-store';
 
-import { AllFiltersModal } from './all-filters-modal';
 import { SaveFilterModal } from './save-filter-modal';
 
 export const LoadFilterButton = observer(() => {
-  const uiStore = useUIStore();
+  const layoutStore = useLayoutStore();
+
   return (
     <>
-      <AllFiltersModal></AllFiltersModal>
-      <button onClick={uiStore.toggleLoadFilterModal}>All filters</button>
+      <button
+        onClick={() => {
+          layoutStore.showActivityEntry('search-panel');
+          layoutStore.sideBarSections.openSection('saved-filters');
+        }}
+      >
+        All filters
+      </button>
     </>
   );
 });

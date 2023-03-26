@@ -3,6 +3,7 @@ import { makeAutoObservable } from 'mobx';
 import { createContext, useContext } from 'react';
 
 import { AutoRunManager } from './autorun-manager';
+import { SideBarSectionStore } from './side-bar-section-store';
 import { SlotGeneratorStore } from './slot-generator-store';
 import { SlotStore } from './slot-store';
 
@@ -17,13 +18,15 @@ export enum SlotName {
 export class LayoutStore {
   isSideBarVisible = false;
 
-  slots = new SlotStore();
+  layoutSlots = new SlotStore();
 
   activityBarEntrySlots = new SlotStore();
 
   sideBarSlotGenerators = new SlotGeneratorStore();
 
   selectedActivityEntryId = '';
+
+  sideBarSections = new SideBarSectionStore();
 
   autoRunManager = new AutoRunManager();
 
@@ -41,8 +44,8 @@ export class LayoutStore {
     this.isSideBarVisible = val;
   }
 
-  getSlot(slot: SlotName) {
-    return this.slots.get(slot);
+  getLayoutSlot(slot: SlotName) {
+    return this.layoutSlots.get(slot);
   }
 
   toggleActivityEntry(id: string) {
@@ -51,6 +54,10 @@ export class LayoutStore {
     } else {
       this.selectedActivityEntryId = id;
     }
+  }
+
+  showActivityEntry(id: string) {
+    this.selectedActivityEntryId = id;
   }
 
   get activityBarEntries() {

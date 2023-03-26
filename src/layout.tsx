@@ -13,7 +13,7 @@ export const LayoutSlot = observer(
     const { children, slotId } = props;
     const store = useLayoutStore();
     return (
-      <Slot slotId={slotId} slotStore={store.slots}>
+      <Slot slotId={slotId} slotStore={store.layoutSlots}>
         {children}
       </Slot>
     );
@@ -74,7 +74,7 @@ export function Cols(
 }
 
 export const ActivityBar = observer(() => {
-  const node = useLayoutStore().getSlot(SlotName.activityBar);
+  const node = useLayoutStore().getLayoutSlot(SlotName.activityBar);
   return <div className={classes.activityBar}>{node}</div>;
 });
 
@@ -101,7 +101,7 @@ export const ActivityBarEntry = observer(
 );
 
 export const SideBar = observer(() => {
-  const node = useLayoutStore().getSlot(SlotName.sideBar);
+  const node = useLayoutStore().getLayoutSlot(SlotName.sideBar);
   return <>{node && <div className={classes.sideBar}>{node}</div>}</>;
 });
 
@@ -120,17 +120,17 @@ export const SideBarBody = observer((props: { children?: React.ReactNode }) => {
 });
 
 export const MainView = observer(() => {
-  const node = useLayoutStore().getSlot(SlotName.mainView);
+  const node = useLayoutStore().getLayoutSlot(SlotName.mainView);
   return <div className={classes.mainView}>{node}</div>;
 });
 
 export const SearchBar = observer(() => {
-  const node = useLayoutStore().getSlot(SlotName.searchBar);
+  const node = useLayoutStore().getLayoutSlot(SlotName.searchBar);
   return <div className={classes.searchBar}>{node}</div>;
 });
 
 export const LogPanel = observer(() => {
-  const node = useLayoutStore().getSlot(SlotName.logPanel);
+  const node = useLayoutStore().getLayoutSlot(SlotName.logPanel);
   const dropRef = useFileDropzone();
   return (
     <div ref={dropRef} className={classes.logPanel}>

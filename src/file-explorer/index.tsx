@@ -6,6 +6,7 @@ import { FileSystemDirectory } from '@/components/file-system/file-system-direct
 import { FileSystemFile } from '@/components/file-system/file-system-file';
 import { FileSystemItem } from '@/components/file-system/file-system-item';
 import { useFileSystemStore } from '@/components/file-system/file-system-store';
+import { SideBarSection } from '@/components/side-bar/section';
 import { PrimaryButton } from '@/components/widget/button';
 import { useCreateLogFiles } from '@/file-dropzone';
 import { Caret } from '@/icons/caret';
@@ -19,7 +20,6 @@ import {
 } from '@/layout';
 
 import classes from './file-explorer.module.scss';
-import { SideBarSection } from './section';
 
 const EntryName = 'file-explorer';
 
@@ -46,7 +46,6 @@ export const DirectoryItem = observer(
     useEffect(() => {
       if (open) {
         item.list().then((res) => {
-          console.log('res', res);
           if (res) {
             setList(res);
           }
@@ -151,12 +150,14 @@ const ListItem = observer(
           href="#"
           className={classes.delete}
           onClick={(e) => {
-            fileSystemStore.deleteHistoryDirectory(id);
+            if (window.confirm('Confirm delete?')) {
+              fileSystemStore.deleteHistoryDirectory(id);
+            }
             e.preventDefault();
             e.stopPropagation();
           }}
         >
-          X
+          ×
         </a>
       </div>
     );

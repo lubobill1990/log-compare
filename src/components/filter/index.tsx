@@ -26,7 +26,6 @@ export const GlobalFilterRenderer = observer(() => {
         inputClassName="flex-1"
         label="Global search"
         value={globalFilter.searchKeywords}
-        disabled={!globalFilter.searchEnabled}
         onChange={(e) => globalFilter.setSearchKeywords(e)}
         placeholder="Format: `pattern1&&pattern2,pattern3`. `pattern1` can be `keyword` or `/regex/`."
       ></DebouncedInputField>

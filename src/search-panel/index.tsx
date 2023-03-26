@@ -4,9 +4,12 @@ import { Find } from '@/icons/find';
 import {
   ActivityBarEntry,
   ActivityBarSlot,
+  SideBarBody,
   SideBarGeneratorSlot,
   SideBarTitle,
 } from '@/layout';
+
+import { SavedFilterList } from './saved-filters';
 
 const EntryName = 'search-panel';
 
@@ -18,10 +21,13 @@ export const Entry = observer(() => {
   );
 });
 
-export const SideBarContent = observer(() => {
+const SideBarContent = observer(() => {
   return (
     <div>
       <SideBarTitle title="Search"></SideBarTitle>
+      <SideBarBody>
+        <SavedFilterList></SavedFilterList>
+      </SideBarBody>
     </div>
   );
 });
