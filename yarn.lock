@@ -10604,6 +10604,11 @@ vite-plugin-eslint@^1.8.1:
     "@types/eslint" "^8.4.5"
     rollup "^2.77.2"
 
+vite-plugin-radar@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-radar/-/vite-plugin-radar-0.7.0.tgz#87bacd584a019142d95773e1194825159ac3f78f"
+  integrity sha512-lTpCJ56GDVzNq41SU+6AZExUFP/yZauwpfEqyatw/ZayYYM7bEFq4KWN3+/Hjwxfe5nCIjIpE594XE1jtjjz2A==
+
 vite-tsconfig-paths@^3.5.2:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/vite-tsconfig-paths/-/vite-tsconfig-paths-3.6.0.tgz#9e6363051b2caaf7c7cec6f9f85ad71feee77920"
