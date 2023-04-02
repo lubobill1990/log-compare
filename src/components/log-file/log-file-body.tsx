@@ -41,6 +41,20 @@ const AutoSizedList = observer(
     const listInnerRef = useRef<HTMLDivElement>(null);
     const listOuterRef = useRef<HTMLDivElement>(null);
 
+    const scrollerWidth = 16;
+    const onItemsRendered = useCallback(() => {
+      if (listOuterRef.current && listInnerRef.current) {
+        if (
+          listOuterRef.current.scrollWidth - listInnerRef.current.clientWidth >
+          scrollerWidth + 4
+        ) {
+          listInnerRef.current.style.width = `${
+            listOuterRef.current.scrollWidth - scrollerWidth
+          }px`;
+        }
+      }
+    }, [listOuterRef, scrollerWidth, listInnerRef]);
+
     const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
 
     useLayoutEffect(() => {
@@ -68,6 +82,7 @@ const AutoSizedList = observer(
             height={height}
             width={width}
             onScroll={onScroll}
+            onItemsRendered={onItemsRendered}
           >
             {LogLineContainer}
           </List>
