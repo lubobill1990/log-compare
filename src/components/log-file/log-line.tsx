@@ -62,13 +62,6 @@ export const LogLineContainer = observer((props: IRowProps) => {
         >
           <div
             className="line-head"
-            onClick={(e) => {
-              e.stopPropagation();
-              file.addExpandedLineRange(
-                line.lineNumber - 1,
-                line.lineNumber - 1
-              );
-            }}
             title={new Date(line.timestamp).toLocaleString()}
           >
             {line.lineNumber + 1}

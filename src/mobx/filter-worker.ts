@@ -6,7 +6,6 @@ import { binarySearchClosestLog } from '@/util';
 
 import { AutoRunManager } from './autorun-manager';
 import { ContentFilter } from './content-filter';
-import { LineRanges } from './line-ranges';
 import { getLinesFromContent } from './log-file-utils';
 
 /// <reference lib="webworker" />
@@ -25,8 +24,6 @@ type SyncOutCallbacks = {
 
 class LogFileWorker {
   lines: LogLine[] = [];
-
-  expandedLineRanges: LineRanges = new LineRanges();
 
   pinedLines = new Map<number, boolean>();
 
@@ -79,14 +76,9 @@ class LogFileWorker {
 
   get filteredLines() {
     const { lineFilter } = this.contentFilter;
-    const rangeFilter = this.expandedLineRanges.filter;
     this.syncOutCallbacks.filterStart();
     const res = this.lines.filter((line) => {
-      return (
-        rangeFilter(line.lineNumber) ||
-        this.pinedLines.has(line.lineNumber) ||
-        lineFilter(line.content)
-      );
+      return this.pinedLines.has(line.lineNumber) || lineFilter(line.content);
     });
     this.syncOutCallbacks.filterEnd(res.length);
     return res;
@@ -170,10 +162,6 @@ export function setupLogFileWorker(
 
 export function setFilterStrings(filterStrings: string[]) {
   contentFilter.setFilterStrings(filterStrings);
-}
-
-export function addExpandedLineRange(start: number, end: number) {
-  worker.expandedLineRanges.addRange(start, end);
 }
 
 export function setPinedLine(lineNumber: number, pined: boolean) {

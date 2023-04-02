@@ -129,10 +129,6 @@ export class LogFile {
     this.filterWorker.terminate();
   }
 
-  addExpandedLineRange(start: number, end: number) {
-    this.filterWorker.addExpandedLineRange(start, end);
-  }
-
   get highlightKeywords() {
     return [this.filter.highlightText, this.globalFilter.highlightText]
       .join(',')
