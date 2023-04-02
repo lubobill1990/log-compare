@@ -12,10 +12,20 @@ import { StorageProvider } from '@/utils/storage-provider';
 import { AutoRunManager } from './autorun-manager';
 import { ContentHighlighter } from './content-highligher';
 import { Filter } from './filter';
+import { LogFileNameStore } from './log-file-name-store';
 import {
   SharedStateStore,
   sharedStateStore as globalSharedStateStore,
 } from './shared-state';
+
+export interface ILogFile {
+  id: string;
+  name: string;
+  selectNearestTimestamp(timestamp: number): void;
+  setEnableSyncTime(enable: boolean): void;
+  init(): void;
+  dispose(): void;
+}
 
 class LogFileStorageProvider extends StorageProvider {
   loadPinedLines() {
@@ -32,33 +42,7 @@ class LogFileStorageProvider extends StorageProvider {
   }
 }
 
-export class LogFileNameStore {
-  private storageProvider: StorageProvider;
-
-  constructor() {
-    this.storageProvider = new StorageProvider('logFilenameMapping');
-  }
-
-  private getFileNameMapping() {
-    return this.storageProvider.load<Record<string, string>>({});
-  }
-
-  getFileName(sha1: string) {
-    return this.getFileNameMapping()[sha1];
-  }
-
-  setFileName(sha1: string, fileName: string) {
-    const mapping = this.getFileNameMapping();
-    mapping[sha1] = fileName;
-    this.storageProvider.save(mapping);
-  }
-}
-
 export class LogFile {
-  id = uuidv4();
-
-  filter = new Filter('', '', '', false);
-
   enableSyncTime = true;
 
   selectedLines = [0, 0, 0];
@@ -75,24 +59,24 @@ export class LogFile {
 
   filteredLines = {} as { [key: string]: LogLine };
 
-  filteredLinesLength = 0;
+  filteredLineCount = 0;
 
-  filtering = false;
+  isFiltering = false;
+
+  enableFilter = true;
 
   filteredLineIndexOfSelectedTimestamp = 0;
 
-  private pendingFilteredLinesIndexArray = [] as number[];
+  private lineIndicesToBeFetched = [] as number[];
 
   private autoRunManager = new AutoRunManager();
 
   constructor(
-    private logFileNameStore: LogFileNameStore,
-    private logFiles: LogFiles,
     public globalFilter: Filter,
     public originName: string,
     public content: string,
-    public sha1 = getSha1(content) as string,
-    public customizedName = logFileNameStore.getFileName(sha1)
+    public sha1: string,
+    public filter: Filter
   ) {
     this.selectedTimestamps[0] = Date.now();
     this.storageProvider = new LogFileStorageProvider(`logFile-${this.sha1}`);
@@ -102,7 +86,11 @@ export class LogFile {
 
   init() {
     this.autoRunManager.autorun(() => {
-      this.filterWorker.setFilterStrings(this.filterStrings);
+      if (this.enableFilter) {
+        this.filterWorker.setFilterStrings(this.filterStrings);
+      } else {
+        this.filterWorker.setFilterStrings([]);
+      }
     });
     this.filterWorker = new ComlinkWorker<any>(
       new URL('./filter-worker', import.meta.url)
@@ -113,13 +101,13 @@ export class LogFile {
       Array.from(this.pinedLines.keys()).map((lineNumber) => lineNumber),
       proxy(() => {
         runInAction(() => {
-          this.filtering = true;
+          this.isFiltering = true;
         });
       }),
       proxy((lineCount: number) => {
         runInAction(() => {
-          this.filtering = false;
-          this.filteredLinesLength = lineCount;
+          this.isFiltering = false;
+          this.filteredLineCount = lineCount;
         });
       }),
       proxy((selectedLines: any, selectedTimestamps: any) => {
@@ -134,8 +122,6 @@ export class LogFile {
         });
       })
     );
-
-    this.content = '';
   }
 
   dispose() {
@@ -166,18 +152,6 @@ export class LogFile {
     return this.highligher(content);
   }
 
-  delete() {
-    this.logFiles.delete(this);
-  }
-
-  focus() {
-    this.logFiles.focus(this);
-  }
-
-  unfocus() {
-    this.logFiles.unfocus(this);
-  }
-
   selectLine(lineNumber: number) {
     this.filterWorker.selectLine(lineNumber);
   }
@@ -194,11 +168,11 @@ export class LogFile {
   }
 
   private throttledFetchFilteredLine = throttle(async () => {
-    if (this.pendingFilteredLinesIndexArray.length === 0) {
+    if (this.lineIndicesToBeFetched.length === 0) {
       return;
     }
-    const indexArrayToFetch = toJS(this.pendingFilteredLinesIndexArray);
-    this.pendingFilteredLinesIndexArray = [];
+    const indexArrayToFetch = toJS(this.lineIndicesToBeFetched);
+    this.lineIndicesToBeFetched = [];
     const filteredLines = (await this.filterWorker.fetchFilteredLine(
       indexArrayToFetch
     )) as Record<string, LogLine>;
@@ -222,7 +196,7 @@ export class LogFile {
       this.appendFilteredLine ||
       Date.now();
     return (index: number) => {
-      this.pendingFilteredLinesIndexArray.push(index);
+      this.lineIndicesToBeFetched.push(index);
       this.throttledFetchFilteredLine();
     };
   }
@@ -246,17 +220,8 @@ export class LogFile {
     }
   }
 
-  get isFocused() {
-    return this.logFiles.focusedFile?.id === this.id;
-  }
-
-  get name() {
-    return this.customizedName || this.originName;
-  }
-
-  set name(name: string) {
-    this.customizedName = name;
-    this.logFileNameStore.setFileName(this.sha1, name);
+  setEnableFilter(enable: boolean) {
+    this.enableFilter = enable;
   }
 
   get filterStrings() {
@@ -275,10 +240,89 @@ export class LogFile {
   }
 }
 
-export class LogFiles {
-  files: LogFile[] = [];
+export class LogFile1 implements ILogFile {
+  id = uuidv4();
 
-  focusedFile: LogFile | null = null;
+  filteredFile: LogFile;
+
+  nonFilteredFile: LogFile;
+
+  enableSyncTime = true;
+
+  sha1: string;
+
+  private customizedName: string;
+
+  constructor(
+    private logFileNameStore: LogFileNameStore,
+    private logFiles: LogFiles,
+    private globalFilter: Filter,
+    private originName: string,
+    private content: string,
+    public filter = new Filter('', '', '', false)
+  ) {
+    this.sha1 = getSha1(content) as string;
+
+    this.filteredFile = new LogFile(
+      this.globalFilter,
+      this.originName,
+      this.content,
+      this.sha1,
+      this.filter
+    );
+    this.nonFilteredFile = new LogFile(
+      this.globalFilter,
+      this.originName,
+      this.content,
+      this.sha1,
+      this.filter
+    );
+    this.nonFilteredFile.setEnableFilter(false);
+
+    this.customizedName = logFileNameStore.getFileName(this.sha1);
+
+    makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  selectNearestTimestamp(targetTimestamp: number) {
+    this.filteredFile.selectNearestTimestamp(targetTimestamp);
+    this.nonFilteredFile.selectNearestTimestamp(targetTimestamp);
+  }
+
+  setEnableSyncTime(enable: boolean) {
+    this.enableSyncTime = enable;
+    this.filteredFile.setEnableSyncTime(enable);
+    this.nonFilteredFile.setEnableSyncTime(enable);
+  }
+
+  delete() {
+    this.logFiles.delete(this);
+  }
+
+  init() {
+    this.filteredFile.init();
+    this.nonFilteredFile.init();
+  }
+
+  dispose() {
+    this.filteredFile.dispose();
+    this.nonFilteredFile.dispose();
+  }
+
+  get name() {
+    return this.customizedName || this.originName;
+  }
+
+  set name(name: string) {
+    this.customizedName = name;
+    this.logFileNameStore.setFileName(this.nonFilteredFile.sha1, name);
+  }
+}
+
+export class LogFiles {
+  files: LogFile1[] = [];
+
+  focusedFile: LogFile1 | null = null;
 
   autoRunManager = new AutoRunManager();
 
@@ -297,27 +341,19 @@ export class LogFiles {
 
   dispose() {
     this.autoRunManager.dispose();
+
+    this.files.forEach((file) => file.dispose());
   }
 
-  add(file: LogFile) {
+  add(file: LogFile1) {
     this.files.push(file);
     file.init();
     this.selectNearestTimestamp(this.sharedStateStore.focusTimestamp);
   }
 
-  delete(file: LogFile) {
+  delete(file: LogFile1) {
     file.dispose();
     this.files = this.files.filter((f) => f !== file);
-  }
-
-  focus(file: LogFile) {
-    this.focusedFile = file;
-  }
-
-  unfocus(file?: LogFile) {
-    if (file?.id === this.focusedFile?.id) {
-      this.focusedFile = null;
-    }
   }
 
   selectNearestTimestamp(timestamp: number) {

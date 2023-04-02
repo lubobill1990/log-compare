@@ -15,7 +15,7 @@ export default defineConfig({
     comlink(),
     VitePluginRadar({
       // Google Analytics tag injection
-      enableDev: true,
+      enableDev: false,
       analytics: {
         id: 'G-RZ5NKLB1W2',
       },

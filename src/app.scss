@@ -1,24 +1,6 @@
 @import 'utilities';
-.App {
-  display: block;
-  background-color: #ddd;
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-}
 
-.vertical-compare-zone {
-  display: flex;
-  overflow: hidden;
-  flex: 1;
-}
 
-.log-header {
-  box-shadow: 0 0px 14px 0px rgb(0 0 0 / 10%);
-  display: flex;
-  align-items: center;
-}
 .title {
   font-size: 20px;
   padding: 0.5rem;
@@ -31,30 +13,6 @@
   width: 100%;
 }
 
-.log-control {
-  display: flex;
-  padding: 0 2rem;
-  align-items: center;
-  height: 100%;
-  // can't select text
-  user-select: none;
-  .control {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: 100%;
-
-    & + .control {
-      margin-left: .5rem;
-    }
-  }
-  .position-wrap {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-  }
-}
 .log-filters {
   position: absolute;
   right: 0;

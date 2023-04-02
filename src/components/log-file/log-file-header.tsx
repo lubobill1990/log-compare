@@ -1,18 +1,20 @@
 import { observer } from 'mobx-react-lite';
 import React, { ChangeEvent } from 'react';
 
-import { DebouncedInputField } from './components/common/form';
-import { ContextMenuTrigger } from './components/widget/context-menu';
-import { LogFile } from './mobx/log-file';
-import { ContextMenuKey, useUIStore } from './mobx/ui-store';
+import { DebouncedInputField } from '@/components/common/form';
+import { ContextMenuTrigger } from '@/components/widget/context-menu';
+import { LogFile1 } from '@/mobx/log-file';
+import { ContextMenuKey, useUIStore } from '@/mobx/ui-store';
 
-export const LogFileHeader = observer((props: { file: LogFile }) => {
+import classes from './log-file.module.scss';
+
+export const LogFileHeader = observer((props: { file: LogFile1 }) => {
   const { file } = props;
   const { showContextMenu } = useUIStore();
 
   return (
     <div
-      className="log-header"
+      className={classes.header}
       onContextMenu={(e) =>
         showContextMenu(
           { x: e.clientX, y: e.clientY },
@@ -35,8 +37,8 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
         </div>
       </ContextMenuTrigger>
 
-      <div className="log-control">
-        <div className="control" title="Sync time between logs">
+      <div className={classes.controlWrap}>
+        <div className={classes.control} title="Sync time between logs">
           <label htmlFor={`${file.id}-sync`}>Sync time</label>
           <input
             id={`${file.id}-sync`}
@@ -47,7 +49,7 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
             }}
           />
         </div>
-        <div className="control">
+        <div className={classes.control}>
           <label htmlFor={`${file.id}-search`}>Search</label>
           <input
             id={`${file.id}-search`}
@@ -60,7 +62,7 @@ export const LogFileHeader = observer((props: { file: LogFile }) => {
             className="check"
           />
           {file.filter.searchEnabled && (
-            <div className="position-wrap">
+            <div className={classes.positionWrap}>
               <div className="log-filters">
                 <DebouncedInputField
                   className="log-filter"

@@ -4,7 +4,7 @@ import { NativeTypes } from 'react-dnd-html5-backend';
 
 import { useGlobalFilterStore } from './mobx/filter';
 import {
-  LogFile,
+  LogFile1,
   useLogFileNameStore,
   useLogFliesStore,
 } from './mobx/log-file';
@@ -16,7 +16,7 @@ function useCreateLogFile() {
   return useCallback(
     (name: string, content: string) => {
       logFileStore.add(
-        new LogFile(
+        new LogFile1(
           logFileNameStore,
           logFileStore,
           globalFilterStore,
