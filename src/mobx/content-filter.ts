@@ -34,7 +34,7 @@ export class ContentFilter {
                 return '';
               }
             } else {
-              return s;
+              return s.toLowerCase();
             }
           })
           .filter((v) => v);

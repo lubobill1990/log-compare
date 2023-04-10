@@ -45,7 +45,7 @@ export class ContentHighlighter {
                 return '';
               }
             } else {
-              return s;
+              return s.toLowerCase();
             }
           })
           .filter((v) => v)
