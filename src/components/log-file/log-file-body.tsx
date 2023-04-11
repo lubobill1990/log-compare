@@ -41,19 +41,19 @@ const AutoSizedList = observer(
     const listInnerRef = useRef<HTMLDivElement>(null);
     const listOuterRef = useRef<HTMLDivElement>(null);
 
-    const scrollerWidth = 16;
+    const paddingWidth = 0;
     const onItemsRendered = useCallback(() => {
       if (listOuterRef.current && listInnerRef.current) {
         if (
           listOuterRef.current.scrollWidth - listInnerRef.current.clientWidth >
-          scrollerWidth + 4
+          paddingWidth + 4
         ) {
           listInnerRef.current.style.width = `${
-            listOuterRef.current.scrollWidth - scrollerWidth
+            listOuterRef.current.scrollWidth - paddingWidth
           }px`;
         }
       }
-    }, [listOuterRef, scrollerWidth, listInnerRef]);
+    }, [listOuterRef, paddingWidth, listInnerRef]);
 
     const localTargetIndex = file.filteredLineIndexOfSelectedTimestamp;
 
