@@ -61,7 +61,10 @@ export const LogLineContainer = observer((props: IRowProps) => {
           onMouseLeave={() => setHovered(false)}
         >
           <div
-            className="line-head"
+            className={cx(
+              'line-head',
+              `width-${Math.ceil(Math.log10(file.filteredLineCount))}`
+            )}
             title={new Date(line.timestamp).toLocaleString()}
           >
             {line.lineNumber + 1}

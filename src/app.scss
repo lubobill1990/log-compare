@@ -1,6 +1,5 @@
 @import 'utilities';
 
-
 .title {
   font-size: 20px;
   padding: 0.5rem;
@@ -79,7 +78,7 @@
 }
 .line {
   display: flex;
-  padding: 0 0.5rem;
+  padding: 0 0.5rem 0 0;
   line-height: 14px;
   font-size: 12px;
   font-family: Menlo, Consolas, 'Courier New', monospace;
@@ -141,6 +140,14 @@
 }
 .line.odd {
   background-color: #ddd;
+  .line-head {
+    background-color: #ddd;
+  }
+}
+.line.even {
+  .line-head {
+    background-color: #fff;
+  }
 }
 .line.prev-2 {
   background-color: rgb(195, 216, 248) !important;
@@ -193,9 +200,19 @@
 
 .line-head {
   width: 2.5rem;
-  min-width: 2.5rem;
-  padding-right: 1rem;
-  position: relative;
+  padding-right: 0.5rem;
+  padding-left: 0.25rem;
+  margin-right: 0.5rem;
+  position: sticky;
+  left: 0;
+  text-align: right;
+  @for $counter from 0 through 7 {
+    // code to execute on each loop
+    &.width-#{$counter} {
+      width: #{$counter + 1}ex;
+      min-width: #{$counter + 1}ex;
+    }
+  }
 }
 
 .line-mark {
