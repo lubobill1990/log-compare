@@ -1,10 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import {
-  FixedSizeList,
-  FixedSizeList as List,
-  ListOnScrollProps,
-} from 'react-window';
+import { FixedSizeList, FixedSizeList as List } from 'react-window';
 
 import { cx } from '@/components/common/cx';
 import { LogFile, LogFile1 } from '@/mobx/log-file';
@@ -42,7 +38,7 @@ const AutoSizedList = observer(
     const listOuterRef = useRef<HTMLDivElement>(null);
 
     const paddingWidth = 0;
-    const onItemsRendered = useCallback(() => {
+    const updateListWidth = useCallback(() => {
       if (listOuterRef.current && listInnerRef.current) {
         if (
           listOuterRef.current.scrollWidth - listInnerRef.current.clientWidth >
@@ -63,7 +59,6 @@ const AutoSizedList = observer(
       }
     }, [localTargetIndex]);
 
-    const onScroll = useCallback((_props: ListOnScrollProps) => {}, []);
     return (
       <>
         {file.filteredLineCount === 0 ? (
@@ -81,8 +76,7 @@ const AutoSizedList = observer(
             }}
             height={height}
             width={width}
-            onScroll={onScroll}
-            onItemsRendered={onItemsRendered}
+            onItemsRendered={updateListWidth}
           >
             {LogLineContainer}
           </List>
