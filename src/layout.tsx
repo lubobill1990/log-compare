@@ -1,12 +1,16 @@
 import { observer } from 'mobx-react-lite';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { mergeRefs } from 'react-merge-refs';
 
 import { cx } from './components/common/cx';
+import { useLogFileResizeDropzone } from './components/log-file/log-file-resize-dropzone';
 import { useFileDropzone } from './file-dropzone';
 import classes from './layout.module.scss';
 import { SlotName, useLayoutStore } from './mobx/layout-store';
 import { ReactNodeGenerator, SlotGenerator } from './mobx/slot-generator-store';
 import { Slot } from './mobx/slot-store';
+import { useUIStore } from './mobx/ui-store';
+import { useResizeObserver } from './resize-observer';
 
 export const LayoutSlot = observer(
   (props: { slotId: SlotName; children: React.ReactNode }) => {
@@ -132,8 +136,16 @@ export const SearchBar = observer(() => {
 export const LogPanel = observer(() => {
   const node = useLayoutStore().getLayoutSlot(SlotName.logPanel);
   const dropRef = useFileDropzone();
+  const ref = useRef<HTMLDivElement>(null);
+  const { width } = useResizeObserver(ref);
+  const uiStore = useUIStore();
+
+  useEffect(() => {
+    uiStore.setLogPanelWidth(width);
+  }, [width, uiStore]);
+
   return (
-    <div ref={dropRef} className={classes.logPanel}>
+    <div ref={mergeRefs([dropRef, ref])} className={classes.logPanel}>
       {node}
     </div>
   );
@@ -173,12 +185,13 @@ const SideBarContent = observer(() => {
 });
 
 export const AppLayout = (props: React.PropsWithChildren) => {
+  const { logFileResizeDropRef } = useLogFileResizeDropzone();
   return (
     <>
       <MainViewContent />
       <ActivityBarContent />
       <SideBarContent />
-      <div className={classes.root}>
+      <div className={classes.root} ref={logFileResizeDropRef}>
         <ActivityBar />
         <SideBar />
         <ColResizer />

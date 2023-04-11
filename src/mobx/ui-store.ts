@@ -19,6 +19,8 @@ export class UIStore {
 
   isSaveFilterModalVisible = false;
 
+  logPanelWidth = 0;
+
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
   }
@@ -44,6 +46,10 @@ export class UIStore {
   hideContextMenu() {
     this.contextMenuActiveKey = null;
     this.contextMenuData = null;
+  }
+
+  setLogPanelWidth(width: number) {
+    this.logPanelWidth = width;
   }
 }
 

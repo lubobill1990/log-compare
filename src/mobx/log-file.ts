@@ -247,6 +247,8 @@ export class LogFile1 implements ILogFile {
 
   sha1: string;
 
+  widthProportion = 0;
+
   private customizedName: string;
 
   constructor(
@@ -289,6 +291,10 @@ export class LogFile1 implements ILogFile {
     this.enableSyncTime = enable;
     this.filteredFile.setEnableSyncTime(enable);
     this.nonFilteredFile.setEnableSyncTime(enable);
+  }
+
+  setWidthProportion(value: number) {
+    this.widthProportion = value;
   }
 
   delete() {
@@ -345,19 +351,29 @@ export class LogFiles {
     this.files.push(file);
     file.init();
     this.selectNearestTimestamp(this.sharedStateStore.focusTimestamp);
+    this.updateWidth();
   }
 
   delete(file: LogFile1) {
     file.dispose();
     this.files = this.files.filter((f) => f !== file);
+    this.updateWidth();
   }
 
   selectNearestTimestamp(timestamp: number) {
     this.files.forEach((file) => file.selectNearestTimestamp(timestamp));
   }
 
+  private updateWidth() {
+    this.files.forEach((v) => v.setWidthProportion(1 / this.size));
+  }
+
   get size() {
     return this.files.length;
+  }
+
+  getFileIndex(file: LogFile1) {
+    return this.files.indexOf(file);
   }
 }
 

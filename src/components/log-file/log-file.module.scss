@@ -50,8 +50,23 @@
   background-color: #fff;
   display: flex;
   flex-direction: column;
-  flex: 1;
   &:not(:first-child) {
     border-left: 1px solid #ddd;
   }
+}
+
+.resizer {
+  width: 8px;
+  cursor: col-resize;
+  background-color: #007fd4;
+  opacity: 0;
+  transition: 200ms linear opacity;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.resizerHover {
+  opacity: 1;
 }
