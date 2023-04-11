@@ -140,15 +140,8 @@
 }
 .line.odd {
   background-color: #ddd;
-  .line-head {
-    background-color: #ddd;
-  }
 }
-.line.even {
-  .line-head {
-    background-color: #fff;
-  }
-}
+
 .line.prev-2 {
   background-color: rgb(195, 216, 248) !important;
 }
@@ -201,11 +194,13 @@
 .line-head {
   width: 2.5rem;
   padding-right: 0.5rem;
-  padding-left: 0.25rem;
+  padding-left: 0.5rem;
   margin-right: 0.5rem;
   position: sticky;
   left: 0;
   text-align: right;
+  background-color: #fff;
+
   @for $counter from 0 through 7 {
     // code to execute on each loop
     &.width-#{$counter} {
@@ -217,13 +212,14 @@
 
 .line-mark {
   position: absolute;
-  right: 4px;
+  right: -5px;
   bottom: 0;
 }
 
 .pin {
   color: rgba(107, 0, 0, 0.744);
   cursor: pointer;
+  font-size: 14px;
 
   &.pinned {
     color: rgb(107, 0, 0);
