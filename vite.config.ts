@@ -1,4 +1,4 @@
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc'
 
 import { defineConfig } from 'vite';
 import { comlink } from 'vite-plugin-comlink';
