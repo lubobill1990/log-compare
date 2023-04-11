@@ -81,7 +81,8 @@ $sideBarBg: #eaeaea;
   display: flex;
   background: #fff;
   flex: 1;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .colResizer {
