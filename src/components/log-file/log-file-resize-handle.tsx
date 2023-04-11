@@ -41,8 +41,7 @@ export const LogFileResizeHandle = observer((props: { index: number }) => {
 
   return (
     <>
-      {uiStore.logPanelWidth >
-        400 * logFilesStore.size + 8 * (logFilesStore.size - 1) && (
+      {uiStore.logPanelWidth > 400 * logFilesStore.size && (
         <LogFileResizeHandleInner
           index={props.index}
         ></LogFileResizeHandleInner>

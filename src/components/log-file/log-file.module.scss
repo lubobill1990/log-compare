@@ -57,6 +57,8 @@
 
 .resizer {
   width: 8px;
+  margin-right: -8px;
+  z-index: 1;
   cursor: col-resize;
   background-color: #007fd4;
   opacity: 0;
